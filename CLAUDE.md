@@ -80,9 +80,21 @@ errors instead of skipping quietly (the next run recovers).
 
 ## Dashboard tabs
 
-1. **Custom leaderboard** – design to come.
-2. **Metrics** – definitions agreed below.
-3. **Chip monitor** – which chips each manager has left and when they played them.
+1. **Custom leaderboard** – rank (with ▲▼ movement), manager, Form, GW,
+   Total. Form = sparkline of league position over the last 5 GWs
+   (`league_history`: rank by running total within the league, ties share –
+   verified to match FPL's rank/last_rank). Each line is scaled to the
+   manager's own range (min span 4 places); end dot green = climbed over the
+   5 GWs, coral = dropped.
+2. **Gameweek** – current GW only, ranked by points after hits; each manager
+   expands to their XI and bench with points per player (FPL's
+   `pick_multiplier` applied, so captain ×2 and auto-subs are reflected).
+   Data: `gw_summary` and `gw_lineups` in `dashboard.json`. Each player in
+   the lineup expands to a list: stat | count (goals = 1) | points (goals = 4),
+   from FPL's `explain` (`gw_breakdown`), plus a captain/TC line. (A
+   column-per-stat table was tried and rejected by the owner as messy.)
+3. **Metrics** – nav dropdown; definitions agreed below.
+4. **Chip monitor** – which chips each manager has left and when they played them.
 
 ## Metric definitions (agreed with owner)
 
@@ -97,20 +109,37 @@ All computed per manager per gameweek, then summed for the season.
   (`freehit`). Bench Boost and Triple Captain weeks count.
 
 **Cards** (show three columns)
-- Yellow card count and red card count across all 15 squad players,
-  unmultiplied.
+- Only players who ended up on the pitch: FPL's per-pick `multiplier` > 0
+  (starting XI after auto-subs – FPL swaps positions/multipliers in the picks
+  file – and all 15 in Bench Boost weeks). Bench players are excluded.
+- Yellow card count and red card count, unmultiplied.
 - Points lost: card deductions from FPL's per-player `explain` breakdown
   (identifiers `yellow_cards`, `red_cards`), multiplied by the armband
-  multiplier (×2, or ×3 with Triple Captain); everyone else ×1, bench included.
+  multiplier (×2, or ×3 with Triple Captain); everyone else ×1.
 - Display points lost as a negative number.
 
 **Missed points**
-- Bench points (`points_on_bench`, after auto-subs; forced to 0 in Bench Boost
-  weeks) + captain gap.
+- Bench gap + captain gap.
+- Bench gap (changed by owner from plain `points_on_bench`) = points of the
+  best legal XI from the 15 − points of the XI that actually counted (after
+  auto-subs), raw points, no captain multiplier. Formation rules: 1 GKP,
+  3–5 DEF, 2–5 MID, 1–3 FWD (`best_xi()` in `02_metrics.R`; ties favour
+  actual starters). Never negative. Forced to 0 in Bench Boost weeks.
+  `bench_in` / `bench_out` name the swaps for the GW breakdown.
 - Captain gap = (highest-scoring player in the 15 − armband wearer's points)
   × (multiplier − 1). So ×1 normally, ×2 in Triple Captain weeks.
 - Armband wearer = captain if he played (minutes > 0), else vice-captain if he
   played, else nobody (armband points = 0). Provisional during a live GW.
+
+**DFYTer Index** (owner's own metric)
+- Per GW, each player's score = (managers with him in their 15 − 1) ÷
+  (managers in the league − 1), i.e. the share of the OTHER managers (those
+  with a team that GW) who also own him. Unique player = 0, owned by all = 1.
+  So a squad sharing no one's players scores 0%; identical teams all score
+  100%.
+- Manager GW score = mean over their 15 players. Season score = mean over
+  their GWs. Shown as a percentage; ranked highest (most template) first.
+- GW breakdown also lists players nobody else in the league owned.
 
 ## Chip rules 2026/27
 

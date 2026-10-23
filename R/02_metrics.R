@@ -10,6 +10,8 @@
 #   card_detail.csv      every player who got a card, with points lost
 #   gw_missed.csv        missed points per manager per GW, with the best
 #                        player and the armband wearer named
+#   gw_dfyter.csv        DFYTer Index per manager per GW, with the players
+#                        nobody else in the league owned
 #   chips_played.csv     every chip played, with the GW and season half
 #
 # Run from the project root:
@@ -59,7 +61,8 @@ read_picks_file <- function(file) {
 
   list(
     picks = as_tibble(x$picks) %>%
-      select(element, position, is_captain, is_vice_captain) %>%
+      select(element, position, is_captain, is_vice_captain,
+             pick_multiplier = multiplier) %>%
       mutate(gw = gw, entry = entry, .before = 1),
     gw_info = tibble(
       gw              = gw,
@@ -90,13 +93,32 @@ read_chips_file <- function(file) {
     )
 }
 
+# Best possible XI from a 15-man squad under FPL's formation rules: 1 GKP,
+# 3-5 DEF, 2-5 MID, 1-3 FWD. Tries every legal formation, takes the top
+# scorers in each position, and keeps the formation with the most points.
+# Ties favour players who actually started, so equal scores aren't "swaps".
+# Returns the elements in that XI.
+best_xi <- function(element, pos, points, started) {
+  top <- function(p, n) {
+    i <- which(pos == p)
+    i[order(-points[i], -started[i])][seq_len(min(n, length(i)))]
+  }
+
+  formations <- expand_grid(d = 3:5, m = 2:5, f = 1:3) %>% filter(d + m + f == 10)
+  options <- pmap(formations, function(d, m, f) {
+    c(top("GKP", 1), top("DEF", d), top("MID", m), top("FWD", f))
+  })
+
+  element[options[[which.max(map_dbl(options, ~ sum(points[.x])))]]]
+}
+
 # Metrics -----------------------------------------------------------------------
 
 build_metrics <- function() {
 
   managers <- read_cached(path(raw_dir, "standings.json"))$results %>%
     as_tibble() %>%
-    transmute(entry, manager = player_name, team = entry_name)
+    transmute(entry, manager = clean_name(player_name), team = entry_name)
 
   # Puts the manager and team name at the front of a per-manager table
   add_names <- function(df) {
@@ -105,10 +127,16 @@ build_metrics <- function() {
       arrange(entry, gw)
   }
 
-  # Player names, so detail tables show "Salah" rather than an ID
-  players <- read_cached(path(raw_dir, "bootstrap.json"))$elements %>%
+  # Player names, so detail tables show "Salah" rather than an ID, plus
+  # position (GKP/DEF/MID/FWD) and club for the gameweek lineups
+  bootstrap <- read_cached(path(raw_dir, "bootstrap.json"))
+  players <- bootstrap$elements %>%
     as_tibble() %>%
-    transmute(element = id, player = web_name)
+    left_join(bootstrap$teams %>% select(team = id, club = short_name),
+              by = "team") %>%
+    left_join(bootstrap$element_types %>% select(element_type = id, pos = singular_name_short),
+              by = "element_type") %>%
+    transmute(element = id, player = web_name, pos, club)
 
   live <- dir_ls(path(raw_dir, "live"), glob = "*.json") %>%
     map(read_live_file) %>%
@@ -172,9 +200,9 @@ build_metrics <- function() {
               by = c("gw", "element_in")) %>%
     left_join(player_points %>% rename(element_out = element, out_points = points),
               by = c("gw", "element_out")) %>%
-    left_join(players %>% rename(element_in = element, player_in = player),
+    left_join(players %>% select(element_in = element, player_in = player),
               by = "element_in") %>%
-    left_join(players %>% rename(element_out = element, player_out = player),
+    left_join(players %>% select(element_out = element, player_out = player),
               by = "element_out") %>%
     mutate(
       across(c(in_points, out_points), ~ replace_na(.x, 0)),
@@ -201,24 +229,49 @@ build_metrics <- function() {
     )
 
   # 2. Cards ------------------------------------------------------------------
-  # Counts are unmultiplied; points lost apply the captain multiplier
+  # Only players who ended up on the pitch: FPL's own multiplier is 0 for the
+  # bench after auto-subs (and nobody is benched in a Bench Boost week).
+  # Counts are unmultiplied; points lost apply the captain multiplier.
+  # Kept as a row per manager per GW, so GWs with no cards still show 0
   gw_cards <- squad %>%
+    mutate(on_pitch = pick_multiplier > 0) %>%
     group_by(gw, entry) %>%
     summarise(
-      yellow_cards     = sum(yellow_cards),
-      red_cards        = sum(red_cards),
-      card_points_lost = sum(card_points * multiplier),
+      yellow_cards     = sum(yellow_cards[on_pitch]),
+      red_cards        = sum(red_cards[on_pitch]),
+      card_points_lost = sum(card_points[on_pitch] * multiplier[on_pitch]),
       .groups = "drop"
     )
 
   card_detail <- squad %>%
-    filter(yellow_cards > 0 | red_cards > 0) %>%
+    filter(pick_multiplier > 0, yellow_cards > 0 | red_cards > 0) %>%
     transmute(entry, gw, player, yellow_cards, red_cards, multiplier,
               card_points_lost = card_points * multiplier)
 
   # 3. Missed points ----------------------------------------------------------
-  # Bench points (zero in Bench Boost weeks) + captain gap, where the gap is
-  # (best player - armband wearer) x the extra multiplier
+  # Bench gap + captain gap.
+  # Bench gap = best legal XI's points - the XI that actually counted (after
+  # auto-subs), raw points with no captain multiplier. So a bench player only
+  # counts if he could legally have replaced a lower-scoring starter. Zero
+  # in Bench Boost weeks. bench_in / bench_out name the swaps.
+  # Captain gap = (best player - armband wearer) x the extra multiplier
+  bench_gap <- squad %>%
+    mutate(started = pick_multiplier > 0) %>%
+    group_by(gw, entry) %>%
+    group_modify(function(d, key) {
+      best <- d$element %in% best_xi(d$element, d$pos, d$points, d$started)
+      swap <- function(rows) {
+        rows <- rows[order(-d$points[rows])]
+        paste(paste(d$player[rows], d$points[rows]), collapse = ", ")
+      }
+      tibble(
+        bench_gain = sum(d$points[best]) - sum(d$points[d$started]),
+        bench_in   = swap(which(best & !d$started)),
+        bench_out  = swap(which(!best & d$started))
+      )
+    }) %>%
+    ungroup()
+
   gw_missed <- squad %>%
     group_by(gw, entry, cap_mult) %>%
     summarise(
@@ -230,11 +283,52 @@ build_metrics <- function() {
     ) %>%
     left_join(gw_info %>% select(gw, entry, chip, points_on_bench),
               by = c("gw", "entry")) %>%
+    left_join(bench_gap, by = c("gw", "entry")) %>%
     mutate(
-      bench_points  = if_else(chip %in% "bboost", 0, points_on_bench),
+      bench_points  = if_else(chip %in% "bboost", 0, bench_gain),
+      across(c(bench_in, bench_out), ~ if_else(chip %in% "bboost", "", .x)),
       captain_gap   = (best_points - armband_points) * (cap_mult - 1),
       missed_points = bench_points + captain_gap
+    ) %>%
+    select(-bench_gain)
+
+  # 4. DFYTer Index -----------------------------------------------------------
+  # Each player's score that GW = share of the OTHER managers in the league
+  # (those with a team that GW) who also have him in their 15. So a player
+  # only you own scores 0 and one everybody owns scores 1. A manager's GW
+  # score is the average over their 15 players; the season score averages
+  # the GWs. 0 = nothing in common with anyone, 1 = identical to everyone
+  ownership <- picks %>%
+    group_by(gw) %>%
+    mutate(league_size = n_distinct(entry)) %>%
+    group_by(gw, element) %>%
+    mutate(owners    = n_distinct(entry),
+           ownership = (owners - 1) / (league_size - 1)) %>%
+    ungroup() %>%
+    left_join(players, by = "element")
+
+  gw_dfyter <- ownership %>%
+    group_by(gw, entry) %>%
+    summarise(
+      dfyter         = mean(ownership),
+      unique_players = paste(sort(player[owners == 1]), collapse = ", "),
+      .groups = "drop"
     )
+
+  # League position after each GW ----------------------------------------------
+  # For the leaderboard's form sparkline: rank by running total within the
+  # league (ties share a position). Matches FPL's rank and last_rank
+  league_history <- dir_ls(path(raw_dir, "history"), glob = "*.json") %>%
+    map(function(file) {
+      read_cached(file)$current %>%
+        as_tibble() %>%
+        transmute(entry = as.integer(path_ext_remove(path_file(file))),
+                  gw = event, total = total_points)
+    }) %>%
+    list_rbind() %>%
+    group_by(gw) %>%
+    mutate(league_rank = min_rank(desc(total))) %>%
+    ungroup()
 
   # Chips -----------------------------------------------------------------------
   # First set must be played before the GW19 deadline
@@ -265,6 +359,12 @@ build_metrics <- function() {
         summarise(across(c(bench_points, captain_gap, missed_points), sum)),
       by = "entry"
     ) %>%
+    left_join(
+      gw_dfyter %>%
+        group_by(entry) %>%
+        summarise(dfyter = mean(dfyter)),
+      by = "entry"
+    ) %>%
     mutate(across(where(is.numeric) & !entry, ~ replace_na(.x, 0)))
 
   list(
@@ -275,7 +375,18 @@ build_metrics <- function() {
     gw_cards        = add_names(gw_cards),
     card_detail     = add_names(card_detail),
     gw_missed       = add_names(gw_missed),
-    chips_played    = add_names(chips_played)
+    gw_dfyter       = add_names(gw_dfyter),
+    chips_played    = add_names(chips_played),
+    league_history  = league_history,
+    # For the Gameweek tab: each manager's GW score and their 15 picks.
+    # pick_multiplier is FPL's own (0 = bench after auto-subs, 2 = captain,
+    # 3 = TC), so points x pick_multiplier summed over the 15 = gw_points
+    gw_points       = add_names(gw_info %>%
+                                  select(gw, entry, chip, gw_points, transfer_cost)),
+    squads          = add_names(squad %>%
+                                  select(gw, entry, position, element, player, pos,
+                                         club, is_captain, is_vice_captain,
+                                         pick_multiplier, minutes, points))
   )
 }
 
@@ -286,7 +397,7 @@ metrics <- build_metrics()
 dir_create(out_dir)
 walk(
   c("season_summary", "gw_transfers", "transfer_detail", "gw_cards",
-    "card_detail", "gw_missed", "chips_played"),
+    "card_detail", "gw_missed", "gw_dfyter", "chips_played"),
   ~ write_csv(metrics[[.x]], path(out_dir, paste0(.x, ".csv")))
 )
 

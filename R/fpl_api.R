@@ -67,6 +67,20 @@ read_cached <- function(file) {
   fromJSON(file)
 }
 
+# Proper-case a person's name. Only words typed all in lower or all in upper
+# case are changed, so deliberate capitals ("McDonald", "Boyd-Morritt") stay
+clean_name <- function(x) {
+  x %>%
+    str_squish() %>%
+    str_split(" ") %>%
+    map_chr(function(words) {
+      fix <- words == str_to_lower(words) | words == str_to_upper(words)
+      words[fix] <- str_to_title(words[fix]) %>%
+        str_replace_all("(?<=')\\p{Ll}", str_to_upper)  # O'brien -> O'Brien
+      paste(words, collapse = " ")
+    })
+}
+
 # TRUE if any fixture in this gameweek kicked off in the last `hours` hours,
 # i.e. a match is on now or finished recently and bonus may still change
 match_in_window <- function(gw, hours = 3) {

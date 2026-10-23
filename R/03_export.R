@@ -28,6 +28,29 @@ build_chip_status <- function(chips_played, managers, current_gw) {
     ))
 }
 
+# Gameweek tab: each lineup player's points breakdown, straight from FPL's
+# explain data - one row per stat with its count (goals = 1) and the points
+# it earned (goals = 4), summed over fixtures in a double gameweek. FPL only
+# lists stats that scored, plus minutes, so the points add up to his total.
+read_player_breakdown <- function(gw, elements) {
+  live <- fromJSON(path(raw_dir, "live", sprintf("gw_%02d.json", gw)),
+                   simplifyVector = FALSE)
+
+  live$elements %>%
+    keep(~ .x$id %in% elements) %>%
+    map(function(el) {
+      el$explain %>%
+        map(~ .x$stats) %>%
+        list_flatten() %>%
+        map(~ tibble(element = el$id, stat = .x$identifier,
+                     value = .x$value, points = .x$points)) %>%
+        list_rbind()
+    }) %>%
+    list_rbind() %>%
+    group_by(element, stat) %>%
+    summarise(value = sum(value), points = sum(points), .groups = "drop")
+}
+
 to_json <- function(x) {
   toJSON(x, dataframe = "rows", na = "null", auto_unbox = TRUE, digits = NA)
 }
@@ -51,14 +74,27 @@ run_export <- function() {
     gw_finished = events$finished[events$id == current_gw],
     standings   = standings$results %>%
       as_tibble() %>%
-      transmute(entry, manager = player_name, team = entry_name,
+      transmute(entry, manager = clean_name(player_name), team = entry_name,
                 rank, last_rank, total, event_total),
     season_summary  = metrics$season_summary,
+    league_history  = metrics$league_history %>% select(entry, gw, league_rank),
     gw_transfers    = metrics$gw_transfers,
     transfer_detail = metrics$transfer_detail,
     gw_cards        = metrics$gw_cards,
     card_detail     = metrics$card_detail,
     gw_missed       = metrics$gw_missed,
+    gw_dfyter       = metrics$gw_dfyter,
+    # Gameweek tab: current GW only
+    gw_summary      = metrics$gw_points %>%
+      filter(gw == current_gw) %>%
+      mutate(net_points = gw_points - transfer_cost),
+    gw_lineups      = metrics$squads %>%
+      filter(gw == current_gw) %>%
+      select(-manager, -team, -gw),
+    gw_breakdown    = read_player_breakdown(
+      current_gw,
+      metrics$squads %>% filter(gw == current_gw) %>% pull(element) %>% unique()
+    ),
     chip_status     = build_chip_status(metrics$chips_played,
                                         metrics$managers, current_gw)
   )

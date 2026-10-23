@@ -1,0 +1,541 @@
+/* Colours live here so light and dark mode only differ in one place.
+   Purple = the brand (header, active states, badges). Green and coral are
+   only ever used to mean good and bad. */
+:root {
+  /* Header: FPL's cyan -> blue -> violet gradient with dark purple ink */
+  --hdr-from: #90f0fb;
+  --hdr-mid: #7fb8fb;
+  --hdr-to: #7660f8;
+  --hdr-ink: #37003c;      /* FPL purple: header text and logo */
+  --hdr-ink-muted: rgba(55, 0, 60, .72);
+  --tab-on-ink: #37003c;   /* text on the active tab (it takes the page colour) */
+  --live: #00a85a;         /* the "live" dot */
+
+  --bg: #f6f4f8;
+  --surface: #ffffff;
+  --text: #17141b;
+  --muted: #6c6575;
+  --line: #e7e3ec;
+  --accent: #6a1477;
+  --accent-soft: #f5e8f7;
+  --good: #0e8a4f;
+  --bad: #e0435a;
+  --yellow: #f2c200;
+  --red: #d63a2f;
+  --rank-up: #34a853;      /* leaderboard movement arrows */
+  --rank-down: #e60023;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tab-on-ink: #ece9f0;
+    --bg: #121014;
+    --surface: #1b181f;
+    --text: #ece9f0;
+    --muted: #9b94a4;
+    --line: #2d2933;
+    --accent: #e0a8ee;
+    --accent-soft: #35203b;
+    --good: #3ddc84;
+    --bad: #ff7a8a;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+.wrap { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+
+/* Header and tabs ----------------------------------------------------------- */
+
+/* The header is FPL's gradient band; z-index keeps it above the frozen table
+   columns when the page scrolls under it */
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(90deg, var(--hdr-from) 0%, var(--hdr-mid) 45%, var(--hdr-to) 100%);
+  color: var(--hdr-ink);
+}
+
+h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding-top: 18px;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.1;
+}
+
+h1 .logo { height: 40px; width: auto; }
+
+#status { margin: 6px 0 14px; font-size: .8rem; color: var(--hdr-ink-muted); }
+
+/* Small green "live" dot before the status line */
+#status::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--live);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .6);
+  vertical-align: 1px;
+}
+
+/* Tabs: a translucent strip with rounded top corners sitting on the bottom
+   edge of the header. The active tab takes the page colour, so it looks
+   joined to the page below (like a folder tab) */
+.tabs {
+  display: inline-flex;
+  max-width: 100%;
+  background: rgba(255, 255, 255, .35);
+  border-radius: 10px 10px 0 0;
+}
+
+/* .tab is a link (Leaderboard, Chips) or a button (Metrics) - look the same */
+.tab {
+  padding: 9px 14px;
+  border: 0;
+  background: none;
+  color: var(--hdr-ink);
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .15s;
+}
+
+.tabs > .tab:first-child { border-top-left-radius: 10px; }
+.tabs > .tab:last-child { border-top-right-radius: 10px; }
+
+.tab:hover { background: rgba(255, 255, 255, .3); }
+.tab.on, .tab.on:hover { background: var(--bg); color: var(--tab-on-ink); font-weight: 700; }
+
+.page-title { color: var(--accent); }
+
+/* Metrics dropdown -------------------------------------------------------- */
+
+.menu { position: relative; }
+
+/* Small chevron after "Metrics", flipping when the menu is open */
+.menu .tab::after {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-3px) rotate(45deg);
+  transition: transform .15s;
+}
+
+.menu .tab[aria-expanded="true"]::after { transform: translateY(0) rotate(-135deg); }
+
+.menu-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 4px;
+  z-index: 2;
+  min-width: 210px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+}
+
+.menu-list a {
+  display: block;
+  padding: 9px 12px;
+  border-radius: 6px;
+  color: var(--text);
+  font-size: .9rem;
+  text-decoration: none;
+}
+
+.menu-list a:hover { background: var(--bg); }
+
+/* On phones the Metrics button is too far right for the menu to fit under
+   it, so the menu spans the tab bar instead (inset from both edges) */
+@media (max-width: 480px) {
+  .tabs { position: relative; }
+  .menu { position: static; }
+  .menu-list { left: 0; right: 0; min-width: 0; }
+}
+
+/* Very small phones (e.g. 320px wide): tighten the tabs so all four fit */
+@media (max-width: 350px) {
+  .tabs .tab { padding: 9px 7px; font-size: .84rem; }  /* .tabs .tab beats the 400px rule */
+}
+
+.tab { white-space: nowrap; }  /* keep "Metrics" and its arrow together */
+.menu-list a.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+.page-title { margin: 0 0 12px 4px; font-size: 1.05rem; }
+
+/* main.wrap, not main: it must beat the .wrap rule's padding */
+main.wrap { padding-top: 24px; padding-bottom: 48px; }
+
+/* Lists of managers ----------------------------------------------------------
+   Each row is a grid: rank | manager | N number columns (N set by --n on the
+   .list). Rows never shrink below --row-min, so when the screen is too narrow
+   the list scrolls sideways - with rank and manager frozen on the left. */
+
+:root {
+  --pad: 12px;        /* row padding left and right */
+  --gap: 8px;         /* gap between columns */
+  --rank-w: 1.75rem;
+  --who-min: 8rem;    /* narrowest the manager column gets before scrolling */
+  --col-w: 3.25rem;   /* each number column */
+}
+
+.list {
+  --row-min: calc(2 * var(--pad) + var(--rank-w) + var(--who-min) +
+                  var(--n) * var(--col-w) + (var(--n) + 1) * var(--gap));
+  container-type: inline-size;  /* lets .detail size itself to the visible width */
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.list > * { min-width: var(--row-min); }
+.list > * + * { border-top: 1px solid var(--line); }
+
+.row {
+  display: grid;
+  grid-template-columns: calc(var(--pad) + var(--rank-w)) minmax(0, 1fr)
+                         repeat(var(--n), var(--col-w));
+  gap: var(--gap);
+  align-items: center;
+  padding: 0 var(--pad) 0 0;
+}
+
+/* Vertical padding sits on the cells, not the row, so the frozen cells can
+   stretch to the full row height (a solid background and divider line) */
+.row > * { padding-block: 10px; }
+
+/* Frozen columns: rank sticks to the left edge, manager just after it. The
+   manager cell also covers the gap so scrolled numbers don't peek through */
+.row > :nth-child(1),
+.row > :nth-child(2) {
+  position: sticky;
+  z-index: 1;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--surface);
+}
+
+.row > :nth-child(1) { left: 0; padding-left: var(--pad); }
+
+.row > :nth-child(2) {
+  left: calc(var(--pad) + var(--rank-w));
+  margin-left: calc(-1 * var(--gap));
+  padding-left: var(--gap);
+  padding-right: 8px;   /* keeps long names off the divider line */
+  transition: box-shadow .15s;
+}
+
+/* Lists without a rank (Chips): the rank column collapses to just the left
+   padding and the manager name moves left to fill it */
+.list.no-rank { --rank-w: 0px; }
+.list.no-rank .row > :nth-child(2) { padding-left: 0; }
+
+/* When the list is wider than the screen, a divider marks the frozen edge;
+   once scrolled, a soft shadow joins it (both classes set in app.js) */
+.list.scrollable .row > :nth-child(2) { box-shadow: inset -1px 0 0 var(--line); }
+
+.list.scrollable.scrolled .row > :nth-child(2) {
+  box-shadow: inset -1px 0 0 var(--line), 8px 0 8px -8px rgba(0, 0, 0, .25);
+}
+
+.head {
+  font-size: .72rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.head > * { padding-block: 8px; }
+
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.mid { text-align: center; }
+.strong { font-weight: 700; }
+
+.rank { align-items: flex-start; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Leaderboard: the movement indicator sits under the rank, the two centred
+   on each other */
+.rank-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: stretch;   /* full column width, so every rank centres on the same line */
+}
+
+/* Rank movement: arrow, small gap, number */
+.move { display: block; margin-top: 2px; font-size: .7rem; line-height: 1; white-space: nowrap; }
+.move i { font-style: normal; font-size: 1em; margin-right: 2px; }
+.move.up { color: var(--rank-up); }
+.move.down { color: var(--rank-down); }
+
+/* Form sparkline: purple line, end dot coloured by trend */
+.spark { display: block; width: 100%; max-width: 48px; height: 24px; margin: 0 auto; overflow: visible; }
+.spark path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .75;
+}
+.spark circle { fill: currentColor; }
+.spark .flat { color: var(--accent); }
+.up, .good { color: var(--good); }
+.down, .bad { color: var(--bad); }
+
+/* Inside a coloured number, keep the colour even where the parent sets its
+   own text colour (e.g. the muted lines in expanded rows) */
+.gw li .num .good, .breakdown .good { color: var(--good); }
+.gw li .num .bad, .breakdown .bad { color: var(--bad); }
+
+.who { min-width: 0; }
+.who b, .who small {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.who b { font-weight: 600; }
+.who small { font-size: .78rem; color: var(--muted); }
+
+/* Expandable rows (Metrics tab) -------------------------------------------- */
+
+.toggle { position: relative; padding-right: 32px; }
+
+summary { list-style: none; cursor: pointer; }
+summary::-webkit-details-marker { display: none; }
+
+summary.toggle::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: translateY(-70%) rotate(45deg);
+  transition: transform .15s;
+}
+
+details[open] summary.toggle::after { transform: translateY(-30%) rotate(-135deg); }
+
+/* The breakdown stays put when the list is scrolled sideways, and is only as
+   wide as the visible part of the list (100cqw) */
+.detail {
+  position: sticky;
+  left: 0;
+  width: 100cqw;
+  padding: 2px 32px 10px calc(var(--pad) + var(--rank-w) + var(--gap));
+  background: var(--bg);
+}
+
+.gw { padding: 8px 0; }
+.gw + .gw { border-top: 1px dashed var(--line); }
+
+.gw-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: .85rem;
+  font-weight: 600;
+}
+
+.gw ul { margin: 4px 0 0; padding: 0; list-style: none; font-size: .85rem; }
+
+.gw li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 0;
+  color: var(--muted);
+}
+
+.gw li .num { color: var(--text); white-space: nowrap; }
+
+.empty { padding: 8px 0; font-size: .85rem; color: var(--muted); }
+
+/* Gameweek lineups --------------------------------------------------------- */
+
+/* Each player is a row that expands to his points breakdown */
+.lineup li.player { display: block; padding: 0; color: var(--text); }
+.lineup li.player small { color: var(--muted); font-size: .72rem; }
+.lineup li.benched, .lineup li.benched .num { color: var(--muted); }
+
+.lineup .player summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 0;
+}
+
+/* Small chevron after the points */
+.lineup .player summary .num::after {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 8px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: translateY(-3px) rotate(45deg);
+  transition: transform .15s;
+}
+
+.lineup .player details[open] summary .num::after { transform: translateY(0) rotate(-135deg); }
+
+/* The breakdown: stat | count | points */
+.lineup .breakdown {
+  margin: 2px 0 8px 2.6em;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: .8rem;
+}
+
+.lineup .breakdown li {
+  display: grid;
+  grid-template-columns: 1fr 3rem 2.5rem;
+  gap: 8px;
+  padding: 2px 0;
+  color: var(--muted);
+}
+
+.lineup .breakdown li span + span {
+  text-align: right;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.lineup .breakdown .bd-head span,
+.lineup .breakdown .bd-head span + span {
+  font-size: .68rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.pos {
+  display: inline-block;
+  width: 2.6em;
+  font-size: .68rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: .68rem;
+  font-weight: 700;
+  vertical-align: 1px;
+}
+
+/* Segmented control (metric and chip-set switchers) ------------------------ */
+
+.segs {
+  display: inline-flex;
+  max-width: 100%;
+  overflow-x: auto;
+  gap: 2px;
+  margin-bottom: 12px;
+  padding: 3px;
+  background: var(--line);
+  border-radius: 8px;
+}
+
+.seg {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.seg.on {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
+}
+
+.note { margin: 12px 4px 0; font-size: .8rem; color: var(--muted); }
+
+/* Cards and chips ----------------------------------------------------------- */
+
+.card {
+  display: inline-block;
+  width: 8px;
+  height: 11px;
+  margin-right: 4px;
+  border-radius: 2px;
+  vertical-align: -1px;
+}
+.card.y { background: var(--yellow); }
+.card.r { background: var(--red); }
+
+.pill {
+  display: inline-block;
+  min-width: 2.6rem;
+  padding: 3px 6px;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 600;
+  text-align: center;
+}
+.pill.available { background: var(--accent-soft); color: var(--accent); }
+.pill.used { border: 1px solid var(--line); color: var(--muted); }
+.pill.expired, .pill.locked { color: var(--muted); opacity: .5; }
+
+/* Small phones: tighten the columns ---------------------------------------- */
+
+@media (max-width: 400px) {
+  .wrap { padding: 0 12px; }
+  main.wrap { padding-top: 20px; }
+  :root {
+    --pad: 10px;
+    --gap: 6px;
+    --rank-w: 1.5rem;
+    --who-min: 7rem;
+    --col-w: 2.75rem;
+  }
+  .tab { padding: 9px 8px; font-size: .86rem; }
+  h1 { font-size: 1.45rem; }
+  h1 .logo { height: 34px; }
+  .toggle { padding-right: 28px; }
+  summary.toggle::after { right: 12px; }
+  .detail { padding-right: 28px; }
+  .seg { padding: 6px 10px; }
+}

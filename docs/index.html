@@ -3,10 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#90f0fb">
   <title>FPL Dashboard</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>FPL Dashboard</h1>
-  <p>Coming soon.</p>
+  <header class="top">
+    <div class="wrap">
+      <h1>
+        <!-- Premier League lion in FPL purple (source: football-logos.cc). If the file is
+             ever missing the image removes itself, so nothing breaks -->
+        <img class="logo" src="img/pl-logo.svg" alt="" onerror="this.remove()">
+        <span id="league">FPL Dashboard</span>
+      </h1>
+      <p id="status">Loading…</p>
+      <nav class="tabs">
+        <a class="tab" data-tab="leaderboard" href="#leaderboard">Leaderboard</a>
+        <a class="tab" data-tab="gameweek" href="#gameweek">Gameweek</a>
+        <div class="menu">
+          <button class="tab" data-tab="metrics" type="button"
+                  aria-haspopup="true" aria-expanded="false">Metrics</button>
+          <div class="menu-list" id="metrics-menu" hidden></div>
+        </div>
+        <a class="tab" data-tab="chips" href="#chips">Chips</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="tab-leaderboard" hidden></section>
+    <section id="tab-gameweek" hidden></section>
+    <section id="tab-metrics" hidden></section>
+    <section id="tab-chips" hidden></section>
+  </main>
+
+  <script src="app.js"></script>
 </body>
 </html>
