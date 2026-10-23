@@ -67,6 +67,16 @@ read_cached <- function(file) {
   fromJSON(file)
 }
 
+# TRUE if any fixture in this gameweek kicked off in the last `hours` hours,
+# i.e. a match is on now or finished recently and bonus may still change
+match_in_window <- function(gw, hours = 3) {
+  fixtures <- fpl_get_text(paste0("fixtures/?event=", gw)) %>% fromJSON()
+  kickoff  <- as.POSIXct(fixtures$kickoff_time,
+                         format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+  now <- Sys.time()
+  any(kickoff <= now & kickoff >= now - hours * 3600, na.rm = TRUE)
+}
+
 # League standings, following pagination (50 managers per page)
 fetch_standings <- function(league_id) {
   page <- 1

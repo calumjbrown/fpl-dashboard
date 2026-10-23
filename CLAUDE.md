@@ -58,10 +58,25 @@ mini-league. No login. All data comes from the public FPL API.
   names, for the dashboard's gameweek breakdown. Drill-down tables
   `transfer_detail` and `card_detail` name the players; `gw_missed` names
   `best_player` and `armband_player`. In `gw_transfers`, Wildcard/Free Hit
-  weeks have `counted = FALSE` and `net_transfer_points = NA`.
+  weeks have `counted = FALSE` and `net_transfer_points = NA`. Numbers
+  verified by the owner against the FPL site. `data/processed/` is
+  gitignored (local checking only).
+- `R/03_export.R` – sources `02_metrics.R` and writes one file,
+  `docs/data/dashboard.json`: `updated`, `data_hash`, `league`,
+  `current_gw`, `gw_finished`, plus row-array tables `standings`,
+  `season_summary`, `gw_transfers`, `transfer_detail`, `gw_cards`,
+  `card_detail`, `gw_missed`, `chip_status` (manager × half × chip, status
+  used / available / locked / expired). Only rewritten when `data_hash`
+  changes, so `updated` = when the data last changed.
+- `.github/workflows/update-data.yml` – ingest → export → commit. Cron
+  `*/30 11-23 * * *` sets `MATCH_WINDOW_ONLY=true`, so ingest only fetches if
+  a fixture in the current GW kicked off in the last 3 hours
+  (`match_in_window()` in `fpl_api.R`); `0 6 * * *` is a daily full run; also
+  manual trigger. Installs git in the container (needed to push). Commits
+  `docs/data` + `data/raw` only when `docs/data` changed.
 
-Next: the owner should sanity-check numbers against the FPL site (bench
-points, a known transfer, a known captain choice).
+Known gap: if FPL starts updating partway through an ingest run, the run
+errors instead of skipping quietly (the next run recovers).
 
 ## Dashboard tabs
 
@@ -112,12 +127,11 @@ All computed per manager per gameweek, then summed for the season.
 |---|---|
 | 0. Setup and smoke test | Done |
 | 1. Ingest and cache script | Done |
-| 2. Metric functions | Built and running; owner to verify numbers |
-| 3. JSON export to `docs/data/`, scheduled workflow, commit-back | To do |
+| 2. Metric functions | Done (verified) |
+| 3. JSON export to `docs/data/`, scheduled workflow, commit-back | Done |
 | 4. Frontend shell (three tabs) | To do |
 | 5. Design each page with the owner | To do |
 | 6. Optional live-score Worker | To do |
 
-Notes for Step 3: schedule every 30–60 min on match days, daily otherwise
-(cron is UTC). Skip the run quietly if FPL is updating. Commit `data/raw/`
-(it is the persistent cache between runs) and `docs/data/`.
+Notes for Step 5: the leaderboard design may need per-GW points history,
+which is in the cached `history/` files but not yet exported.

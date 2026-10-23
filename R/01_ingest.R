@@ -48,6 +48,13 @@ run_ingest <- function(league_id = Sys.getenv("LEAGUE_ID")) {
   message("Current GW: ", current_gw,
           " | final GWs cached permanently: ", length(final_gws))
 
+  # The half-hourly schedule sets MATCH_WINDOW_ONLY so that it only fetches
+  # while a match is on or just finished. The daily run always fetches.
+  if (Sys.getenv("MATCH_WINDOW_ONLY") == "true" && !match_in_window(current_gw)) {
+    message("No match in the last 3 hours - skipping run.")
+    return(invisible(FALSE))
+  }
+
   # 2. League members -------------------------------------------------------
   standings <- fetch_standings(league_id)
   write_json(standings, path(raw_dir, "standings.json"),

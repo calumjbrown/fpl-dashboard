@@ -1,0 +1,62 @@
+name: Update dashboard data
+
+on:
+  schedule:
+    # Every 30 min, 11:00-23:30 UTC. Only fetches from FPL if a match kicked
+    # off in the last 3 hours (see MATCH_WINDOW_ONLY below).
+    - cron: "*/30 11-23 * * *"
+    # Daily full run: picks up final bonus points and anything missed
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Never run two updates at once (they would both try to push)
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    container: rocker/r-ver:4.5
+    steps:
+      # The R container has no git; checkout needs it to allow pushing back
+      - name: Install git
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git
+
+      - uses: actions/checkout@v5
+
+      - name: Install R packages
+        run: >
+          Rscript -e 'install.packages(c("httr2", "jsonlite", "dplyr", "purrr",
+          "fs", "magrittr", "tibble", "tidyr", "readr", "stringr"))'
+
+      - name: Fetch from FPL
+        env:
+          LEAGUE_ID: ${{ vars.LEAGUE_ID }}
+          MATCH_WINDOW_ONLY: ${{ github.event.schedule == '*/30 11-23 * * *' }}
+        run: Rscript R/01_ingest.R
+
+      - name: Build metrics and export JSON
+        run: Rscript R/03_export.R
+
+      # data/raw is only committed alongside a dashboard change. Anything not
+      # frozen is refetched every run anyway, so nothing is lost by skipping.
+      - name: Commit if the dashboard data changed
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          if [ -z "$(git status --porcelain -- docs/data)" ]; then
+            echo "Dashboard data unchanged - nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data data/raw
+          git commit -m "Update dashboard data"
+          git pull --rebase
+          git push
