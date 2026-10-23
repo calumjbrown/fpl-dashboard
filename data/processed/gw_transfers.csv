@@ -1,0 +1,106 @@
+entry,manager,team,gw,chip,transfer_cost,transfers,gross_gain,counted,net_transfer_points
+168599,Matthew Taberham,Bryan Mbigbumo,1,NA,0,0,0,TRUE,0
+168599,Matthew Taberham,Bryan Mbigbumo,2,NA,0,0,0,TRUE,0
+168599,Matthew Taberham,Bryan Mbigbumo,3,wildcard,0,14,-34,FALSE,NA
+168599,Matthew Taberham,Bryan Mbigbumo,4,bboost,0,1,1,TRUE,1
+168599,Matthew Taberham,Bryan Mbigbumo,5,NA,0,1,-3,TRUE,-3
+168599,Matthew Taberham,Bryan Mbigbumo,6,NA,0,0,0,TRUE,0
+168599,Matthew Taberham,Bryan Mbigbumo,7,NA,0,3,2,TRUE,2
+905504,Nic Makepeace,Makepeaces Mavericks,1,NA,0,0,0,TRUE,0
+905504,Nic Makepeace,Makepeaces Mavericks,2,NA,0,0,0,TRUE,0
+905504,Nic Makepeace,Makepeaces Mavericks,3,NA,0,1,-3,TRUE,-3
+905504,Nic Makepeace,Makepeaces Mavericks,4,NA,4,3,9,TRUE,5
+905504,Nic Makepeace,Makepeaces Mavericks,5,NA,0,1,-11,TRUE,-11
+905504,Nic Makepeace,Makepeaces Mavericks,6,NA,0,0,0,TRUE,0
+905504,Nic Makepeace,Makepeaces Mavericks,7,3xc,0,2,0,TRUE,0
+1190912,Matthew Kemp,tbc,1,NA,0,0,0,TRUE,0
+1190912,Matthew Kemp,tbc,2,NA,0,0,0,TRUE,0
+1190912,Matthew Kemp,tbc,3,NA,0,0,0,TRUE,0
+1190912,Matthew Kemp,tbc,4,NA,0,3,16,TRUE,16
+1190912,Matthew Kemp,tbc,5,NA,0,0,0,TRUE,0
+1190912,Matthew Kemp,tbc,6,NA,0,0,0,TRUE,0
+1190912,Matthew Kemp,tbc,7,NA,0,3,-5,TRUE,-5
+1751789,Emon Keshavarz,STTTWOTL FC,1,NA,0,0,0,TRUE,0
+1751789,Emon Keshavarz,STTTWOTL FC,2,NA,0,0,0,TRUE,0
+1751789,Emon Keshavarz,STTTWOTL FC,3,3xc,0,0,0,TRUE,0
+1751789,Emon Keshavarz,STTTWOTL FC,4,wildcard,0,12,23,FALSE,NA
+1751789,Emon Keshavarz,STTTWOTL FC,5,NA,0,2,6,TRUE,6
+1751789,Emon Keshavarz,STTTWOTL FC,6,NA,0,0,0,TRUE,0
+1751789,Emon Keshavarz,STTTWOTL FC,7,NA,0,1,-3,TRUE,-3
+3072794,Joe Boyd-Morritt,Øde Toilette,1,bboost,0,0,0,TRUE,0
+3072794,Joe Boyd-Morritt,Øde Toilette,2,NA,0,0,0,TRUE,0
+3072794,Joe Boyd-Morritt,Øde Toilette,3,3xc,8,4,-6,TRUE,-14
+3072794,Joe Boyd-Morritt,Øde Toilette,4,NA,0,1,0,TRUE,0
+3072794,Joe Boyd-Morritt,Øde Toilette,5,NA,4,2,0,TRUE,-4
+3072794,Joe Boyd-Morritt,Øde Toilette,6,NA,4,2,-2,TRUE,-6
+3072794,Joe Boyd-Morritt,Øde Toilette,7,NA,0,1,1,TRUE,1
+5408113,Jamie Stovin-Bradford,Le Tiss' Tinfoilers,1,NA,0,0,0,TRUE,0
+5408113,Jamie Stovin-Bradford,Le Tiss' Tinfoilers,2,NA,0,0,0,TRUE,0
+5408113,Jamie Stovin-Bradford,Le Tiss' Tinfoilers,3,NA,4,3,-2,TRUE,-6
+5408113,Jamie Stovin-Bradford,Le Tiss' Tinfoilers,4,wildcard,0,12,-9,FALSE,NA
+5408113,Jamie Stovin-Bradford,Le Tiss' Tinfoilers,5,NA,0,0,0,TRUE,0
+5408113,Jamie Stovin-Bradford,Le Tiss' Tinfoilers,6,NA,0,2,3,TRUE,3
+5408113,Jamie Stovin-Bradford,Le Tiss' Tinfoilers,7,NA,0,0,0,TRUE,0
+5611625,Barnaby Hodgkins,Barnaby's XI,1,NA,0,0,0,TRUE,0
+5611625,Barnaby Hodgkins,Barnaby's XI,2,NA,0,0,0,TRUE,0
+5611625,Barnaby Hodgkins,Barnaby's XI,3,3xc,0,2,-4,TRUE,-4
+5611625,Barnaby Hodgkins,Barnaby's XI,4,NA,0,0,0,TRUE,0
+5611625,Barnaby Hodgkins,Barnaby's XI,5,NA,0,2,10,TRUE,10
+5611625,Barnaby Hodgkins,Barnaby's XI,6,NA,0,1,4,TRUE,4
+5611625,Barnaby Hodgkins,Barnaby's XI,7,NA,0,0,0,TRUE,0
+5618693,Calum Brown,Brown Town,1,NA,0,0,0,TRUE,0
+5618693,Calum Brown,Brown Town,2,NA,0,0,0,TRUE,0
+5618693,Calum Brown,Brown Town,3,NA,0,2,-11,TRUE,-11
+5618693,Calum Brown,Brown Town,4,wildcard,0,3,10,FALSE,NA
+5618693,Calum Brown,Brown Town,5,NA,0,1,6,TRUE,6
+5618693,Calum Brown,Brown Town,6,NA,0,1,5,TRUE,5
+5618693,Calum Brown,Brown Town,7,3xc,0,0,0,TRUE,0
+5868715,Adam Hodgkins,Jersey Barnstormers,1,NA,0,0,0,TRUE,0
+5868715,Adam Hodgkins,Jersey Barnstormers,2,NA,0,1,6,TRUE,6
+5868715,Adam Hodgkins,Jersey Barnstormers,3,NA,0,1,5,TRUE,5
+5868715,Adam Hodgkins,Jersey Barnstormers,4,NA,0,1,4,TRUE,4
+5868715,Adam Hodgkins,Jersey Barnstormers,5,NA,4,2,1,TRUE,-3
+5868715,Adam Hodgkins,Jersey Barnstormers,6,wildcard,0,13,5,FALSE,NA
+5868715,Adam Hodgkins,Jersey Barnstormers,7,3xc,0,1,-3,TRUE,-3
+6777022,David Glanville,Rambunctious,1,NA,0,0,0,TRUE,0
+6777022,David Glanville,Rambunctious,2,NA,0,1,-12,TRUE,-12
+6777022,David Glanville,Rambunctious,3,wildcard,0,8,5,FALSE,NA
+6777022,David Glanville,Rambunctious,4,NA,0,0,0,TRUE,0
+6777022,David Glanville,Rambunctious,5,NA,0,1,2,TRUE,2
+6777022,David Glanville,Rambunctious,6,NA,0,1,10,TRUE,10
+6777022,David Glanville,Rambunctious,7,NA,0,1,-8,TRUE,-8
+7984273,matthew henderson,Isidor's Bane,1,NA,0,0,0,TRUE,0
+7984273,matthew henderson,Isidor's Bane,2,NA,0,0,0,TRUE,0
+7984273,matthew henderson,Isidor's Bane,3,wildcard,0,16,-11,FALSE,NA
+7984273,matthew henderson,Isidor's Bane,4,3xc,0,0,0,TRUE,0
+7984273,matthew henderson,Isidor's Bane,5,NA,0,0,0,TRUE,0
+7984273,matthew henderson,Isidor's Bane,6,NA,0,0,0,TRUE,0
+7984273,matthew henderson,Isidor's Bane,7,bboost,0,4,29,TRUE,29
+8186920,Christopher Loadman,Sesko Meal Deal,1,bboost,0,0,0,TRUE,0
+8186920,Christopher Loadman,Sesko Meal Deal,2,NA,0,0,0,TRUE,0
+8186920,Christopher Loadman,Sesko Meal Deal,3,NA,0,2,3,TRUE,3
+8186920,Christopher Loadman,Sesko Meal Deal,4,NA,0,0,0,TRUE,0
+8186920,Christopher Loadman,Sesko Meal Deal,5,NA,0,1,3,TRUE,3
+8186920,Christopher Loadman,Sesko Meal Deal,6,wildcard,0,19,0,FALSE,NA
+8186920,Christopher Loadman,Sesko Meal Deal,7,NA,0,0,0,TRUE,0
+8320512,Alex Macpherson,fcmcp,1,3xc,0,0,0,TRUE,0
+8320512,Alex Macpherson,fcmcp,2,NA,0,0,0,TRUE,0
+8320512,Alex Macpherson,fcmcp,3,NA,0,2,7,TRUE,7
+8320512,Alex Macpherson,fcmcp,4,NA,0,1,-1,TRUE,-1
+8320512,Alex Macpherson,fcmcp,5,NA,0,1,12,TRUE,12
+8320512,Alex Macpherson,fcmcp,6,NA,0,1,1,TRUE,1
+8320512,Alex Macpherson,fcmcp,7,wildcard,0,10,7,FALSE,NA
+8562038,Jonny Harbord,Frank The Tank,1,NA,0,0,0,TRUE,0
+8562038,Jonny Harbord,Frank The Tank,2,NA,0,1,-4,TRUE,-4
+8562038,Jonny Harbord,Frank The Tank,3,NA,0,1,-5,TRUE,-5
+8562038,Jonny Harbord,Frank The Tank,4,NA,0,0,0,TRUE,0
+8562038,Jonny Harbord,Frank The Tank,5,NA,0,2,-3,TRUE,-3
+8562038,Jonny Harbord,Frank The Tank,6,NA,0,0,0,TRUE,0
+8562038,Jonny Harbord,Frank The Tank,7,NA,0,2,-2,TRUE,-2
+8605433,Eliott Wolstenholme,3 Little Piggies,1,NA,0,0,0,TRUE,0
+8605433,Eliott Wolstenholme,3 Little Piggies,2,NA,0,0,0,TRUE,0
+8605433,Eliott Wolstenholme,3 Little Piggies,3,3xc,0,0,0,TRUE,0
+8605433,Eliott Wolstenholme,3 Little Piggies,4,NA,0,3,15,TRUE,15
+8605433,Eliott Wolstenholme,3 Little Piggies,5,NA,0,1,2,TRUE,2
+8605433,Eliott Wolstenholme,3 Little Piggies,6,NA,0,1,0,TRUE,0
+8605433,Eliott Wolstenholme,3 Little Piggies,7,NA,0,0,0,TRUE,0
