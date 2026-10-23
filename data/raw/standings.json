@@ -28,12 +28,12 @@
     {
       "entry": 905504,
       "entry_name": "Makepeaces Mavericks",
-      "event_total": 0,
+      "event_total": 2,
       "last_rank": 3,
       "player_name": "Nic Makepeace",
       "rank": 2,
       "rank_sort": 2,
-      "total": 500
+      "total": 502
     },
     {
       "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/8186839/b8ef6edc-d03a-463e-8592-50e43e9903bc.png",
@@ -67,13 +67,23 @@
       "total": 477
     },
     {
+      "entry": 168599,
+      "entry_name": "Bryan Mbigbumo",
+      "event_total": 1,
+      "last_rank": 8,
+      "player_name": "Matthew Taberham",
+      "rank": 6,
+      "rank_sort": 6,
+      "total": 457
+    },
+    {
       "entry": 3072794,
       "entry_name": "Øde Toilette",
       "event_total": 0,
       "last_rank": 6,
       "player_name": "Joe Boyd-Morritt",
-      "rank": 6,
-      "rank_sort": 6,
+      "rank": 7,
+      "rank_sort": 7,
       "total": 457
     },
     {
@@ -82,16 +92,6 @@
       "event_total": 0,
       "last_rank": 5,
       "player_name": "Christopher Loadman",
-      "rank": 7,
-      "rank_sort": 7,
-      "total": 456
-    },
-    {
-      "entry": 168599,
-      "entry_name": "Bryan Mbigbumo",
-      "event_total": 0,
-      "last_rank": 8,
-      "player_name": "Matthew Taberham",
       "rank": 8,
       "rank_sort": 8,
       "total": 456
@@ -99,12 +99,12 @@
     {
       "entry": 1190912,
       "entry_name": "tbc",
-      "event_total": 0,
+      "event_total": 1,
       "last_rank": 9,
       "player_name": "Matthew Kemp",
       "rank": 9,
       "rank_sort": 9,
-      "total": 453
+      "total": 454
     },
     {
       "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/6166238/49d27b4b-11b5-419c-bab9-c2ab0af62d32.png",
