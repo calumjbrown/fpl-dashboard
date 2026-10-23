@@ -18,7 +18,7 @@
     {
       "entry": 7984273,
       "entry_name": "Isidor's Bane",
-      "event_total": 106,
+      "event_total": 0,
       "last_rank": 4,
       "player_name": "matthew henderson",
       "rank": 1,
@@ -28,18 +28,18 @@
     {
       "entry": 905504,
       "entry_name": "Makepeaces Mavericks",
-      "event_total": 87,
+      "event_total": 0,
       "last_rank": 3,
       "player_name": "Nic Makepeace",
       "rank": 2,
       "rank_sort": 2,
-      "total": 503
+      "total": 500
     },
     {
       "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/8186839/b8ef6edc-d03a-463e-8592-50e43e9903bc.png",
       "entry": 5611625,
       "entry_name": "Barnaby's XI",
-      "event_total": 73,
+      "event_total": 0,
       "last_rank": 2,
       "player_name": "Barnaby Hodgkins",
       "rank": 3,
@@ -49,7 +49,7 @@
     {
       "entry": 8605433,
       "entry_name": "3 Little Piggies",
-      "event_total": 69,
+      "event_total": 0,
       "last_rank": 1,
       "player_name": "Eliott Wolstenholme",
       "rank": 4,
@@ -59,7 +59,7 @@
     {
       "entry": 5618693,
       "entry_name": "Brown Town",
-      "event_total": 83,
+      "event_total": 0,
       "last_rank": 7,
       "player_name": "Calum Brown",
       "rank": 5,
@@ -69,29 +69,29 @@
     {
       "entry": 3072794,
       "entry_name": "Øde Toilette",
-      "event_total": 64,
+      "event_total": 0,
       "last_rank": 6,
       "player_name": "Joe Boyd-Morritt",
       "rank": 6,
       "rank_sort": 6,
-      "total": 459
-    },
-    {
-      "entry": 168599,
-      "entry_name": "Bryan Mbigbumo",
-      "event_total": 67,
-      "last_rank": 8,
-      "player_name": "Matthew Taberham",
-      "rank": 7,
-      "rank_sort": 7,
-      "total": 458
+      "total": 457
     },
     {
       "entry": 8186920,
       "entry_name": "Sesko Meal Deal",
-      "event_total": 57,
+      "event_total": 0,
       "last_rank": 5,
       "player_name": "Christopher Loadman",
+      "rank": 7,
+      "rank_sort": 7,
+      "total": 456
+    },
+    {
+      "entry": 168599,
+      "entry_name": "Bryan Mbigbumo",
+      "event_total": 0,
+      "last_rank": 8,
+      "player_name": "Matthew Taberham",
       "rank": 8,
       "rank_sort": 8,
       "total": 456
@@ -99,7 +99,7 @@
     {
       "entry": 1190912,
       "entry_name": "tbc",
-      "event_total": 78,
+      "event_total": 0,
       "last_rank": 9,
       "player_name": "Matthew Kemp",
       "rank": 9,
@@ -110,7 +110,7 @@
       "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/6166238/49d27b4b-11b5-419c-bab9-c2ab0af62d32.png",
       "entry": 6777022,
       "entry_name": "Rambunctious",
-      "event_total": 83,
+      "event_total": 0,
       "last_rank": 13,
       "player_name": "David Glanville",
       "rank": 10,
@@ -118,29 +118,29 @@
       "total": 448
     },
     {
-      "entry": 1751789,
-      "entry_name": "STTTWOTL FC",
-      "event_total": 64,
-      "last_rank": 10,
-      "player_name": "Emon Keshavarz",
-      "rank": 11,
-      "rank_sort": 11,
-      "total": 435
-    },
-    {
       "entry": 8562038,
       "entry_name": "Frank The Tank",
-      "event_total": 63,
+      "event_total": 0,
       "last_rank": 11,
       "player_name": "Jonny Harbord",
+      "rank": 11,
+      "rank_sort": 11,
+      "total": 433
+    },
+    {
+      "entry": 1751789,
+      "entry_name": "STTTWOTL FC",
+      "event_total": 0,
+      "last_rank": 10,
+      "player_name": "Emon Keshavarz",
       "rank": 12,
       "rank_sort": 12,
-      "total": 433
+      "total": 431
     },
     {
       "entry": 5408113,
       "entry_name": "Le Tiss' Tinfoilers",
-      "event_total": 62,
+      "event_total": 0,
       "last_rank": 12,
       "player_name": "Jamie Stovin-Bradford",
       "rank": 13,
@@ -151,22 +151,22 @@
       "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/5868715/6c59abbd-c06c-47b4-9862-e22275eecbdb.png",
       "entry": 5868715,
       "entry_name": "Jersey Barnstormers",
-      "event_total": 91,
+      "event_total": 0,
       "last_rank": 14,
       "player_name": "Adam Hodgkins",
       "rank": 14,
       "rank_sort": 14,
-      "total": 415
+      "total": 414
     },
     {
       "entry": 8320512,
       "entry_name": "fcmcp",
-      "event_total": 58,
+      "event_total": 0,
       "last_rank": 15,
       "player_name": "Alex Macpherson",
       "rank": 15,
       "rank_sort": 15,
-      "total": 347
+      "total": 342
     }
   ]
 }
