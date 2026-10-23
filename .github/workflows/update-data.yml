@@ -23,11 +23,12 @@ jobs:
     timeout-minutes: 20
     container: rocker/r-ver:4.5
     steps:
-      # The R container has no git; checkout needs it to allow pushing back
-      - name: Install git
+      # The R container lacks git (checkout needs it to allow pushing back)
+      # and libuv1 (the pre-built `fs` package needs it to load)
+      - name: Install system libraries
         run: |
           apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git libuv1
 
       - uses: actions/checkout@v5
 
