@@ -1,13 +1,22 @@
 name: Update dashboard data
 
+# GitHub's scheduler is best effort: runs are often hours late or dropped,
+# worst on the hour and half hour. So the schedules use odd minutes, and the
+# reliable trigger is an external cron service calling workflow_dispatch
+# every 15 min with match_window_only = true (setup notes in CLAUDE.md).
 on:
   schedule:
-    # Every 30 min, 11:00-23:30 UTC. Only fetches from FPL if a match kicked
+    # Every 30 min, 11:07-23:37 UTC. Only fetches from FPL if a match kicked
     # off in the last 3 hours (see MATCH_WINDOW_ONLY below).
-    - cron: "*/30 11-23 * * *"
+    - cron: "7,37 11-23 * * *"
     # Daily full run: picks up final bonus points and anything missed
-    - cron: "0 6 * * *"
+    - cron: "17 6 * * *"
   workflow_dispatch:
+    inputs:
+      match_window_only:
+        description: "Only fetch if a match kicked off in the last 3 hours"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -40,7 +49,7 @@ jobs:
       - name: Fetch from FPL
         env:
           LEAGUE_ID: ${{ vars.LEAGUE_ID }}
-          MATCH_WINDOW_ONLY: ${{ github.event.schedule == '*/30 11-23 * * *' }}
+          MATCH_WINDOW_ONLY: ${{ github.event.schedule == '7,37 11-23 * * *' || inputs.match_window_only == true }}
         run: Rscript R/01_ingest.R
 
       - name: Build metrics and export JSON

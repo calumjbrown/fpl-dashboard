@@ -68,14 +68,38 @@ run_export <- function() {
 
   current_gw <- max(events$id[events$finished | events$is_current])
 
+  # Current GW score per manager, after hits (live during the GW)
+  gw_summary <- metrics$gw_points %>%
+    filter(gw == current_gw) %>%
+    mutate(net_points = gw_points - transfer_cost)
+
+  # Leaderboard. FPL's standings lag during a live GW: last_rank isn't
+  # refreshed until the GW is processed (so arrows would show last week's
+  # movement) and event_total trails the live score. So rank, movement and
+  # totals come from each manager's history (refetched every run), falling
+  # back to FPL's figures only for a manager with no history row yet
+  history_at <- function(g) metrics$league_history %>% filter(gw == g)
+
+  leaderboard <- standings$results %>%
+    as_tibble() %>%
+    transmute(entry, manager = clean_name(player_name), team = entry_name,
+              fpl_rank = rank, fpl_total = total, fpl_event = event_total) %>%
+    left_join(history_at(current_gw) %>% select(entry, rank = league_rank, total),
+              by = "entry") %>%
+    left_join(history_at(current_gw - 1) %>% select(entry, last_rank = league_rank),
+              by = "entry") %>%
+    left_join(gw_summary %>% select(entry, event_total = net_points), by = "entry") %>%
+    mutate(rank        = coalesce(rank, fpl_rank),
+           total       = coalesce(total, fpl_total),
+           event_total = coalesce(event_total, fpl_event)) %>%
+    select(entry, manager, team, rank, last_rank, total, event_total) %>%
+    arrange(rank)
+
   data <- list(
     league      = standings$league$name,
     current_gw  = current_gw,
     gw_finished = events$finished[events$id == current_gw],
-    standings   = standings$results %>%
-      as_tibble() %>%
-      transmute(entry, manager = clean_name(player_name), team = entry_name,
-                rank, last_rank, total, event_total),
+    standings   = leaderboard,
     season_summary  = metrics$season_summary,
     league_history  = metrics$league_history %>% select(entry, gw, league_rank),
     gw_transfers    = metrics$gw_transfers,
@@ -85,9 +109,7 @@ run_export <- function() {
     gw_missed       = metrics$gw_missed,
     gw_dfyter       = metrics$gw_dfyter,
     # Gameweek tab: current GW only
-    gw_summary      = metrics$gw_points %>%
-      filter(gw == current_gw) %>%
-      mutate(net_points = gw_points - transfer_cost),
+    gw_summary      = gw_summary,
     gw_lineups      = metrics$squads %>%
       filter(gw == current_gw) %>%
       select(-manager, -team, -gw),

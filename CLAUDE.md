@@ -69,11 +69,21 @@ mini-league. No login. All data comes from the public FPL API.
   used / available / locked / expired). Only rewritten when `data_hash`
   changes, so `updated` = when the data last changed.
 - `.github/workflows/update-data.yml` – ingest → export → commit. Cron
-  `*/30 11-23 * * *` sets `MATCH_WINDOW_ONLY=true`, so ingest only fetches if
+  `7,37 11-23 * * *` sets `MATCH_WINDOW_ONLY=true`, so ingest only fetches if
   a fixture in the current GW kicked off in the last 3 hours
-  (`match_in_window()` in `fpl_api.R`); `0 6 * * *` is a daily full run; also
-  manual trigger. Installs git in the container (needed to push). Commits
-  `docs/data` + `data/raw` only when `docs/data` changed.
+  (`match_in_window()` in `fpl_api.R`); `17 6 * * *` is a daily full run.
+  Manual / API trigger (`workflow_dispatch`) takes input `match_window_only`
+  (default false = full fetch). Installs git and libuv1 in the container.
+  Commits `docs/data` + `data/raw` only when `docs/data` changed.
+- **GitHub's scheduler proved unreliable** (24 Oct 2026: runs hours late or
+  dropped – only 4 scheduled runs in ~17h, none during a 12:30 kickoff).
+  Odd-minute crons help a bit; the intended reliable trigger is an external
+  free cron (e.g. cron-job.org) POSTing every 15 min to
+  `https://api.github.com/repos/calumjbrown/fpl-dashboard/actions/workflows/update-data.yml/dispatches`
+  with body `{"ref":"main","inputs":{"match_window_only":true}}` and headers
+  `Authorization: Bearer <fine-grained PAT, this repo only, Actions: read &
+  write>`, `Accept: application/vnd.github+json`. The token lives only in the
+  cron service – never in the repo.
 
 Known gap: if FPL starts updating partway through an ingest run, the run
 errors instead of skipping quietly (the next run recovers).
@@ -81,7 +91,10 @@ errors instead of skipping quietly (the next run recovers).
 ## Dashboard tabs
 
 1. **Custom leaderboard** – rank (with ▲▼ movement), manager, Form, GW,
-   Total. Form = sparkline of league position over the last 5 GWs
+   Total. Rank, movement (vs previous GW) and Total come from
+   `league_history`, GW = live net points from `gw_summary` – NOT FPL's
+   standings, whose `last_rank` isn't refreshed until a GW is processed
+   (arrows showed the previous GW's movement) and whose `event_total` lags. Form = sparkline of league position over the last 5 GWs
    (`league_history`: rank by running total within the league, ties share –
    verified to match FPL's rank/last_rank). Each line is scaled to the
    manager's own range (min span 4 places); end dot green = climbed over the
@@ -158,8 +171,8 @@ All computed per manager per gameweek, then summed for the season.
 | 1. Ingest and cache script | Done |
 | 2. Metric functions | Done (verified) |
 | 3. JSON export to `docs/data/`, scheduled workflow, commit-back | Done |
-| 4. Frontend shell (three tabs) | To do |
-| 5. Design each page with the owner | To do |
+| 4. Frontend shell (tabs) | Done – live at calumjbrown.github.io/fpl-dashboard |
+| 5. Design each page with the owner | In progress (ongoing tweaks) |
 | 6. Optional live-score Worker | To do |
 
 Notes for Step 5: the leaderboard design may need per-GW points history,
