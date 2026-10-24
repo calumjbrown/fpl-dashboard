@@ -28,12 +28,12 @@
     {
       "entry": 905504,
       "entry_name": "Makepeaces Mavericks",
-      "event_total": 2,
+      "event_total": 4,
       "last_rank": 3,
       "player_name": "Nic Makepeace",
       "rank": 2,
       "rank_sort": 2,
-      "total": 502
+      "total": 507
     },
     {
       "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/8186839/b8ef6edc-d03a-463e-8592-50e43e9903bc.png",
@@ -69,12 +69,12 @@
     {
       "entry": 168599,
       "entry_name": "Bryan Mbigbumo",
-      "event_total": 1,
+      "event_total": 2,
       "last_rank": 8,
       "player_name": "Matthew Taberham",
       "rank": 6,
       "rank_sort": 6,
-      "total": 457
+      "total": 460
     },
     {
       "entry": 3072794,
@@ -84,7 +84,7 @@
       "player_name": "Joe Boyd-Morritt",
       "rank": 7,
       "rank_sort": 7,
-      "total": 457
+      "total": 459
     },
     {
       "entry": 8186920,
@@ -118,24 +118,24 @@
       "total": 448
     },
     {
-      "entry": 8562038,
-      "entry_name": "Frank The Tank",
-      "event_total": 0,
-      "last_rank": 11,
-      "player_name": "Jonny Harbord",
-      "rank": 11,
-      "rank_sort": 11,
-      "total": 433
-    },
-    {
       "entry": 1751789,
       "entry_name": "STTTWOTL FC",
       "event_total": 0,
       "last_rank": 10,
       "player_name": "Emon Keshavarz",
+      "rank": 11,
+      "rank_sort": 11,
+      "total": 435
+    },
+    {
+      "entry": 8562038,
+      "entry_name": "Frank The Tank",
+      "event_total": 0,
+      "last_rank": 11,
+      "player_name": "Jonny Harbord",
       "rank": 12,
       "rank_sort": 12,
-      "total": 431
+      "total": 433
     },
     {
       "entry": 5408113,
@@ -156,7 +156,7 @@
       "player_name": "Adam Hodgkins",
       "rank": 14,
       "rank_sort": 14,
-      "total": 414
+      "total": 415
     },
     {
       "entry": 8320512,
@@ -166,7 +166,7 @@
       "player_name": "Alex Macpherson",
       "rank": 15,
       "rank_sort": 15,
-      "total": 342
+      "total": 347
     }
   ]
 }
