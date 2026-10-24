@@ -274,6 +274,24 @@ main.wrap { padding-top: 24px; padding-bottom: 48px; }
 
 .head > * { padding-block: 8px; }
 
+/* Sortable column headings (Chips): look like the plain headings, with a
+   small arrow on the active one */
+.sort {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: inherit;   /* left under Manager, centred under the chips */
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sort:hover, .sort.on { color: var(--text); }
+.sort i { font-style: normal; font-size: .85em; margin-left: 3px; }
+
 .num { text-align: right; font-variant-numeric: tabular-nums; }
 .mid { text-align: center; }
 .strong { font-weight: 700; }

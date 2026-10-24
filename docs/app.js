@@ -21,6 +21,7 @@ let byElement = new Map(); // current GW points breakdown rows by player id
 let leagueHistory = new Map(); // league position after each GW, by manager
 let metricView = "transfers";
 let chipHalf = 1;
+let chipSort = { key: "manager", dir: 1 };  // Chips table sort: column, 1 = ascending
 
 // Helpers -------------------------------------------------------------------
 
@@ -307,6 +308,30 @@ const METRICS = {
   },
 };
 
+// Pints: one for every gameweek lost (lowest score after hits). Added after
+// METRICS is defined because it refers to the current gameweek
+METRICS.pints = {
+  label: "Pints",
+  note: "Lose a gameweek (lowest score in the league after transfer hits) and " +
+        "you down a pint. Joint-bottom: everyone tied drinks. The current " +
+        "gameweek counts once the next one starts.",
+  cols: [
+    { head: "Pints", value: (s) => s.pints, main: true },
+  ],
+  score: (s) => s.pints,  // most pints at the top
+  detail: pintsDetail,
+};
+
+function pintsDetail(entry) {
+  const losses = [...(byEntry.gw_pints.get(entry) || [])].sort((a, b) => b.gw - a.gw);
+  if (!losses.length) return `<p class="empty">No pints yet. Clean record.</p>`;
+
+  return losses.map((p) => gwBlock(p.gw, "1 pint", [
+    line(`Lowest score: ${p.net_points} pts` +
+         (p.joint_with ? ` (joint with ${esc(p.joint_with)})` : ""), ""),
+  ])).join("");
+}
+
 const pct = (x) => (x * 100).toFixed(1) + "%";
 
 function dfyterDetail(entry) {
@@ -430,16 +455,37 @@ function renderChips() {
     return `<span class="pill ${c.status}" title="${chipName(c.chip)}: ${c.status}">${text}</span>`;
   };
 
-  // Alphabetical by name (so first name, then surname); no rank on this tab
-  const byName = [...data.standings].sort((a, b) => a.manager.localeCompare(b.manager));
-  const rows = byName.map((s) => {
-    const chips = status.get(s.entry) || [];
-    return `<div class="row">
+  const chipOf = (entry, id) => (status.get(entry) || []).find((x) => x.chip === id);
+
+  // Sorting (click a header; click again to reverse). A chip column orders
+  // used chips by gameweek, then ✓ still available, then – expired/locked.
+  // Ties, and the Manager column, go alphabetically (first name, then surname)
+  const chipRank = (c) =>
+    !c ? [3, 0] : c.status === "used" ? [0, c.gw] : c.status === "available" ? [1, 0] : [2, 0];
+
+  const compare = (a, b) => {
+    if (chipSort.key !== "manager") {
+      const [ga, va] = chipRank(chipOf(a.entry, chipSort.key));
+      const [gb, vb] = chipRank(chipOf(b.entry, chipSort.key));
+      if (ga !== gb || va !== vb) return chipSort.dir * (ga - gb || va - vb);
+      return a.manager.localeCompare(b.manager);
+    }
+    return chipSort.dir * a.manager.localeCompare(b.manager);
+  };
+
+  const rows = [...data.standings].sort(compare).map((s) => `<div class="row">
       <span></span>
       ${who(s)}
-      ${CHIPS.map((c) => `<span class="mid">${pill(chips.find((x) => x.chip === c.id))}</span>`).join("")}
-    </div>`;
-  });
+      ${CHIPS.map((c) => `<span class="mid">${pill(chipOf(s.entry, c.id))}</span>`).join("")}
+    </div>`);
+
+  // A sortable header: a button showing ▲/▼ when it's the active sort
+  const sortHead = (key, label, title = "") => {
+    const on = chipSort.key === key;
+    const arrow = on ? `<i>${chipSort.dir === 1 ? "▲" : "▼"}</i>` : "";
+    return `<button class="sort${on ? " on" : ""}" data-sort="${key}"` +
+           `${title ? ` title="Sort by ${title}"` : ""}>${label}${arrow}</button>`;
+  };
 
   const note = chipHalf === 1
     ? "First set: must be played before the GW19 deadline and doesn't carry over."
@@ -448,12 +494,13 @@ function renderChips() {
   return `<div class="segs">${switcher}</div>
     <div class="list no-rank" style="--n:${CHIPS.length}">
       <div class="row head">
-        <span></span><span>Manager</span>
-        ${CHIPS.map((c) => `<span class="mid" title="${c.name}">${c.short}</span>`).join("")}
+        <span></span><span>${sortHead("manager", "Manager", "manager")}</span>
+        ${CHIPS.map((c) => `<span class="mid">${sortHead(c.id, c.short, c.name)}</span>`).join("")}
       </div>
       ${rows.join("")}
     </div>
-    <p class="note">${note} ✓ = still available, GW = when it was played.</p>`;
+    <p class="note">${note} ✓ = still available, GW = when it was played.
+      Tap a column heading to sort.</p>`;
 }
 
 // Page setup ----------------------------------------------------------------
@@ -513,7 +560,8 @@ function setMenu(open) {
 }
 
 function indexData() {
-  for (const key of ["gw_transfers", "transfer_detail", "card_detail", "gw_missed", "gw_dfyter"]) {
+  for (const key of ["gw_transfers", "transfer_detail", "card_detail", "gw_missed",
+                     "gw_dfyter", "gw_pints"]) {
     byEntry[key] = groupBy(data[key], "entry");
   }
   byElement = groupBy(data.gw_breakdown, "element");
@@ -541,6 +589,14 @@ document.addEventListener("click", (e) => {
 
   const half = e.target.closest("[data-half]");
   if (half) { chipHalf = Number(half.dataset.half); render("chips"); }
+
+  // Chips table headings: same column again reverses, a new column starts ascending
+  const sort = e.target.closest("[data-sort]");
+  if (sort) {
+    const key = sort.dataset.sort;
+    chipSort = { key, dir: chipSort.key === key ? -chipSort.dir : 1 };
+    render("chips");
+  }
 });
 
 // While a list is scrolled sideways, mark it so CSS can shadow the frozen

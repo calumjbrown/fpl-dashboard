@@ -159,6 +159,14 @@ All computed per manager per gameweek, then summed for the season.
   their GWs. Shown as a percentage; ranked highest (most template) first.
 - GW breakdown also lists players nobody else in the league owned.
 
+**Pints** (owner's own metric)
+- A manager downs a pint for every gameweek they lose: lowest GW score in
+  the league, after transfer hits (`gw_points − transfer_cost`, live-calculated).
+- Joint-bottom: everyone tied drinks (assumption – owner can change).
+- The current (latest started) gameweek is excluded; it counts once the next
+  GW starts. `gw_pints` lists each loss with `joint_with`; season count is
+  `pints` in `season_summary`. Ranked most pints first.
+
 ## Chip rules 2026/27
 
 - Eight chips: Wildcard, Free Hit, Bench Boost, Triple Captain – one set per
