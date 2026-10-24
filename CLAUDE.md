@@ -94,7 +94,12 @@ errors instead of skipping quietly (the next run recovers).
    Total. Rank, movement (vs previous GW) and Total come from
    `league_history`, GW = live net points from `gw_summary` – NOT FPL's
    standings, whose `last_rank` isn't refreshed until a GW is processed
-   (arrows showed the previous GW's movement) and whose `event_total` lags. Form = sparkline of league position over the last 5 GWs
+   (arrows showed the previous GW's movement) and whose `event_total` lags.
+   **All GW scores are calculated live** in `02_metrics.R`: Σ live player
+   points × FPL `pick_multiplier` (FPL's stored `entry_history.points` and
+   history `total_points` lag mid-GW – showed 0 when the FPL site showed 16).
+   `league_history` total = cumsum(GW score − hits). Both verified identical
+   to FPL's stored figures for finished GWs 1–7. Form = sparkline of league position over the last 5 GWs
    (`league_history`: rank by running total within the league, ties share –
    verified to match FPL's rank/last_rank). Each line is scaled to the
    manager's own range (min span 4 places); end dot green = climbed over the

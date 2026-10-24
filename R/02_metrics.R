@@ -184,6 +184,16 @@ build_metrics <- function() {
       multiplier  = if_else(has_armband, cap_mult, 1)
     )
 
+  # GW score = live player points x FPL's pick multiplier. FPL's stored
+  # entry_history points lag during a live GW (they sat at 0 while players
+  # were scoring); for finished GWs the two are identical (checked GW1-7)
+  gw_info <- gw_info %>%
+    select(-gw_points) %>%
+    left_join(squad %>%
+                group_by(gw, entry) %>%
+                summarise(gw_points = sum(points * pick_multiplier), .groups = "drop"),
+              by = c("gw", "entry"))
+
   # 1. Net transfer points ----------------------------------------------------
   # Player in minus player out, for the transfer GW only, whole squad,
   # minus hits, excluding Wildcard and Free Hit weeks
@@ -316,19 +326,19 @@ build_metrics <- function() {
     )
 
   # League position after each GW ----------------------------------------------
-  # For the leaderboard's form sparkline: rank by running total within the
-  # league (ties share a position). Matches FPL's rank and last_rank
-  league_history <- dir_ls(path(raw_dir, "history"), glob = "*.json") %>%
-    map(function(file) {
-      read_cached(file)$current %>%
-        as_tibble() %>%
-        transmute(entry = as.integer(path_ext_remove(path_file(file))),
-                  gw = event, total = total_points)
-    }) %>%
-    list_rbind() %>%
+  # For the leaderboard (rank, movement, total) and the form sparkline.
+  # Running total = cumulative (GW score - hits), using the live GW score
+  # above, so it's live during a GW (FPL's stored total_points lags too).
+  # Matches FPL's totals exactly for finished GWs (checked GW1-7). Ranked
+  # within the league after each GW, ties sharing a position
+  league_history <- gw_info %>%
+    arrange(entry, gw) %>%
+    group_by(entry) %>%
+    mutate(total = cumsum(gw_points - transfer_cost)) %>%
     group_by(gw) %>%
     mutate(league_rank = min_rank(desc(total))) %>%
-    ungroup()
+    ungroup() %>%
+    select(entry, gw, total, league_rank)
 
   # Chips -----------------------------------------------------------------------
   # First set must be played before the GW19 deadline
