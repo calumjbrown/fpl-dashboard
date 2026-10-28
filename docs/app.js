@@ -371,8 +371,9 @@ const METRICS = {
 METRICS.pints = {
   label: "Pints",
   note: "Lose a gameweek (lowest score in the league after transfer hits) and " +
-        "you down a pint. Joint-bottom: everyone tied drinks. The current " +
-        "gameweek counts once the next one starts.",
+        "you down a pint. Joint-bottom: everyone tied drinks. A gameweek " +
+        "counts once its points are final (bonus and corrections applied, " +
+        "usually the day after the last match).",
   cols: [
     { head: "Pints", value: (s) => s.pints, main: true },
   ],

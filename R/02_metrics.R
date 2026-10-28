@@ -330,12 +330,15 @@ build_metrics <- function() {
 
   # 5. Pints ------------------------------------------------------------------
   # Lose a gameweek (lowest score in the league, after hits) and you down a
-  # pint. Joint-bottom: everyone tied drinks. The current (latest started)
-  # gameweek isn't counted until the next one begins
-  latest_gw <- max(gw_info$gw)
+  # pint. Joint-bottom: everyone tied drinks. A gameweek only counts once its
+  # points are final: FPL marks it finished and data_checked (bonus and any
+  # corrections applied), usually the day after the last match
+  final_gws <- bootstrap$events %>%
+    filter(finished, data_checked) %>%
+    pull(id)
 
   gw_pints <- gw_info %>%
-    filter(gw < latest_gw) %>%
+    filter(gw %in% final_gws) %>%
     mutate(net_points = gw_points - transfer_cost) %>%
     left_join(managers %>% select(entry, manager), by = "entry") %>%
     group_by(gw) %>%
