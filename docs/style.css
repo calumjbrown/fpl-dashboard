@@ -179,7 +179,9 @@ h1 .logo { height: 40px; width: auto; }
 
 /* Very small phones (e.g. 320px wide): tighten the tabs so all four fit */
 @media (max-width: 350px) {
-  .tabs .tab { padding: 9px 7px; font-size: .84rem; }  /* .tabs .tab beats the 400px rule */
+  .tabs .tab { padding: 9px 5px; font-size: .8rem; }  /* .tabs .tab beats the 400px rule */
+  .menu .tab::after { margin-left: 4px; }
+  .wrap { padding: 0 10px; }
 }
 
 .tab { white-space: nowrap; }  /* keep "Metrics" and its arrow together */
@@ -500,6 +502,7 @@ details[open] summary.toggle::after { transform: translateY(-30%) rotate(-135deg
   font: inherit;
   font-size: .85rem;
   font-weight: 600;
+  text-decoration: none;  /* the Gameweek switch uses links */
   cursor: pointer;
 }
 

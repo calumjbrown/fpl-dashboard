@@ -104,14 +104,21 @@ errors instead of skipping quietly (the next run recovers).
    verified to match FPL's rank/last_rank). Each line is scaled to the
    manager's own range (min span 4 places); end dot green = climbed over the
    5 GWs, coral = dropped.
-2. **Gameweek** – current GW only, ranked by points after hits; each manager
+2. **Gameweek** – nav dropdown (same as Metrics; both share `MENUS` in
+   app.js), current GW only, two views (`#gameweek/leaderboard`,
+   `#gameweek/players`). **Players**: every player
+   picked by anyone in the league, by GW points (ties: most owned, then
+   name), with Owned count; expands to who picked him (C/V/TC badge, points
+   earned them incl. captain multiplier, or "bench"). Built in the browser
+   from `gw_lineups` – no extra data. **Leaderboard**: ranked by points after hits; each manager
    expands to their XI and bench with points per player (FPL's
    `pick_multiplier` applied, so captain ×2 and auto-subs are reflected).
    Data: `gw_summary` and `gw_lineups` in `dashboard.json`. Each player in
    the lineup expands to a list: stat | count (goals = 1) | points (goals = 4),
    from FPL's `explain` (`gw_breakdown`), plus a captain/TC line. (A
    column-per-stat table was tried and rejected by the owner as messy.)
-3. **Metrics** – nav dropdown; definitions agreed below.
+3. **Metrics** – nav dropdown (Net transfer points, Cards, Missed points,
+   DFYTer Index, Pints); definitions agreed below.
 4. **Chip monitor** – which chips each manager has left and when they played them.
 
 ## Metric definitions (agreed with owner)
@@ -142,7 +149,10 @@ All computed per manager per gameweek, then summed for the season.
   best legal XI from the 15 − points of the XI that actually counted (after
   auto-subs), raw points, no captain multiplier. Formation rules: 1 GKP,
   3–5 DEF, 2–5 MID, 1–3 FWD (`best_xi()` in `02_metrics.R`; ties favour
-  actual starters). Never negative. Forced to 0 in Bench Boost weeks.
+  actual starters, both within a position and between formations with equal
+  points – so swaps are only shown when they gain points, never 0-for-0;
+  owner reported this for Alex Macpherson GW8). Never negative. Forced to 0
+  in Bench Boost weeks.
   `bench_in` / `bench_out` name the swaps for the GW breakdown.
 - Captain gap = (highest-scoring player in the 15 − armband wearer's points)
   × (multiplier − 1). So ×1 normally, ×2 in Triple Captain weeks.

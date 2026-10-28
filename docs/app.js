@@ -20,6 +20,7 @@ let byEntry = {};          // per-GW tables split by manager, see indexData()
 let byElement = new Map(); // current GW points breakdown rows by player id
 let leagueHistory = new Map(); // league position after each GW, by manager
 let metricView = "transfers";
+let gwView = "leaderboard";  // Gameweek tab: "leaderboard" or "players"
 let chipHalf = 1;
 let chipSort = { key: "manager", dir: 1 };  // Chips table sort: column, 1 = ascending
 
@@ -146,7 +147,19 @@ function sparkline(entry) {
 // The current gameweek only: ranked by points after hits, each manager
 // expanding to their lineup
 
+// Two views, chosen from the Gameweek dropdown in the nav (and the URL, e.g.
+// #gameweek/players): the managers' table, or every player picked in the league
+const GW_VIEWS = { leaderboard: "Leaderboard", players: "Players" };
+
 function renderGameweek() {
+  const provisional = data.gw_finished ? ""
+    : " The gameweek is still in progress, so points and auto-subs are provisional.";
+
+  return `<h2 class="page-title">Gameweek ${data.current_gw} · ${GW_VIEWS[gwView]}</h2>
+    ${gwView === "players" ? gwPlayers(provisional) : gwLeaderboard(provisional)}`;
+}
+
+function gwLeaderboard(provisional) {
   const lineups = groupBy(data.gw_lineups, "entry");
   const sorted = [...data.gw_summary].sort((a, b) => b.net_points - a.net_points);
   const ranks = tiedRanks(sorted, (s) => s.net_points);
@@ -161,17 +174,62 @@ function renderGameweek() {
       <div class="detail">${lineupDetail(s, lineups.get(s.entry) || [])}</div>
     </details>`);
 
-  const provisional = data.gw_finished ? ""
-    : " The gameweek is still in progress, so points and auto-subs are provisional.";
-
-  return `<h2 class="page-title">Gameweek ${data.current_gw}</h2>
-    <div class="list" style="--n:2">
+  return `<div class="list" style="--n:2">
       <div class="row head toggle">
         <span>#</span><span>Manager</span><span class="num">Hits</span><span class="num">Pts</span>
       </div>
       ${rows.join("")}
     </div>
     <p class="note">Points after transfer hits.${provisional} Tap a manager to see their team.</p>`;
+}
+
+// Every player picked by anyone in the league this gameweek, highest score
+// first (ties: most owned first, then name). Each expands to who picked him
+function gwPlayers(provisional) {
+  const managers = new Map(data.standings.map((s) => [s.entry, s.manager]));
+  const leagueSize = data.standings.length;
+
+  const players = [...groupBy(data.gw_lineups, "element").values()]
+    .map((picks) => ({ ...picks[0], picks }))
+    .sort((a, b) => b.points - a.points || b.picks.length - a.picks.length ||
+                    a.player.localeCompare(b.player));
+  const ranks = tiedRanks(players, (p) => p.points);
+
+  // One line per manager who picked him: armband badge, and the points he
+  // earned them (x2 / x3 as captain), or "bench" if he didn't count
+  const pickedBy = (p) => [...p.picks]
+    .sort((a, b) => managers.get(a.entry).localeCompare(managers.get(b.entry)))
+    .map((k) => {
+      const tc = data.gw_summary.find((s) => s.entry === k.entry)?.chip === "3xc";
+      const armband = k.is_captain ? (tc ? "TC" : "C") : k.is_vice_captain ? "V" : "";
+      const label = esc(managers.get(k.entry)) +
+                    (armband ? ` <span class="badge">${armband}</span>` : "");
+      return k.pick_multiplier > 0
+        ? line(label, k.points * k.pick_multiplier)
+        : line(label, "bench", "benched");
+    });
+
+  const rows = players.map((p, i) => `<details>
+      <summary class="row toggle">
+        <span class="rank">${ranks[i]}</span>
+        <span class="who"><b>${esc(p.player)}</b><small>${p.pos} · ${esc(p.club)}</small></span>
+        <span class="num">${p.picks.length}</span>
+        <span class="num strong">${p.points}</span>
+      </summary>
+      <div class="detail lineup">
+        ${block(`Picked by ${p.picks.length} of ${leagueSize}`, "", pickedBy(p))}
+      </div>
+    </details>`);
+
+  return `<div class="list" style="--n:2">
+      <div class="row head toggle">
+        <span>#</span><span>Player</span><span class="num">Owned</span><span class="num">Pts</span>
+      </div>
+      ${rows.join("")}
+    </div>
+    <p class="note">Every player picked by someone in the league this gameweek. Pts is
+      the player's own score; tap a player to see who picked him and what he
+      earned each of them (doubled as captain).${provisional}</p>`;
 }
 
 // Names for FPL's points categories, in FPL's order (used to sort too)
@@ -535,28 +593,47 @@ function showTab() {
     metricView = sub;
     render("metrics");
   }
+  if (tab === "gameweek" && GW_VIEWS[sub] && sub !== gwView) {
+    gwView = sub;
+    render("gameweek");
+  }
 
   for (const t of TABS) document.getElementById("tab-" + t).hidden = t !== tab;
   for (const el of document.querySelectorAll(".tabs .tab")) {
     el.classList.toggle("on", el.dataset.tab === tab);
   }
-  renderMenu(tab);
-  setMenu(false);
+  renderMenus(tab);
+  setMenu(null);
   markScrollable();
 }
 
-// Metrics dropdown in the nav -------------------------------------------------
+// Dropdowns in the nav (Gameweek and Metrics) ---------------------------------
+// Each tab with a dropdown: its items as [id, label], and the one showing now
 
-function renderMenu(tab) {
-  document.getElementById("metrics-menu").innerHTML = Object.entries(METRICS).map(([id, x]) => {
-    const on = tab === "metrics" && id === metricView ? ' class="on"' : "";
-    return `<a href="#metrics/${id}"${on}>${x.label}</a>`;
-  }).join("");
+const MENUS = {
+  gameweek: { items: () => Object.entries(GW_VIEWS), current: () => gwView },
+  metrics: {
+    items: () => Object.entries(METRICS).map(([id, x]) => [id, x.label]),
+    current: () => metricView,
+  },
+};
+
+function renderMenus(tab) {
+  for (const [name, menu] of Object.entries(MENUS)) {
+    document.getElementById(name + "-menu").innerHTML = menu.items().map(([id, label]) => {
+      const on = tab === name && id === menu.current() ? ' class="on"' : "";
+      return `<a href="#${name}/${id}"${on}>${label}</a>`;
+    }).join("");
+  }
 }
 
-function setMenu(open) {
-  document.querySelector(".menu .tab").setAttribute("aria-expanded", open);
-  document.getElementById("metrics-menu").hidden = !open;
+// Open the named dropdown and close the others; setMenu(null) closes them all
+function setMenu(name) {
+  for (const button of document.querySelectorAll(".menu .tab")) {
+    const open = button.dataset.tab === name;
+    button.setAttribute("aria-expanded", open);
+    document.getElementById(button.dataset.tab + "-menu").hidden = !open;
+  }
 }
 
 function indexData() {
@@ -579,13 +656,15 @@ function showStatus() {
 
 // One click listener for the whole page
 document.addEventListener("click", (e) => {
-  // Metrics button opens / closes its menu
-  if (e.target.closest(".menu .tab")) {
-    setMenu(document.getElementById("metrics-menu").hidden);
+  // A dropdown's button (Gameweek / Metrics) opens its menu, or closes it if open
+  const menuButton = e.target.closest(".menu .tab");
+  if (menuButton) {
+    const name = menuButton.dataset.tab;
+    setMenu(document.getElementById(name + "-menu").hidden ? name : null);
     return;
   }
-  // Any other click (including picking a metric) closes the menu
-  setMenu(false);
+  // Any other click (including picking an item) closes the menus
+  setMenu(null);
 
   const half = e.target.closest("[data-half]");
   if (half) { chipHalf = Number(half.dataset.half); render("chips"); }
@@ -609,7 +688,7 @@ document.addEventListener("scroll", (e) => {
 }, true);
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") setMenu(false);
+  if (e.key === "Escape") setMenu(null);
 });
 
 async function init() {

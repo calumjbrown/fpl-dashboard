@@ -96,8 +96,9 @@ read_chips_file <- function(file) {
 # Best possible XI from a 15-man squad under FPL's formation rules: 1 GKP,
 # 3-5 DEF, 2-5 MID, 1-3 FWD. Tries every legal formation, takes the top
 # scorers in each position, and keeps the formation with the most points.
-# Ties favour players who actually started, so equal scores aren't "swaps".
-# Returns the elements in that XI.
+# Ties favour players who actually started - both within a position and
+# between formations with equal points - so a bench player is only "swapped
+# in" when it gains points (no 0-for-0 swaps). Returns the elements in that XI.
 best_xi <- function(element, pos, points, started) {
   top <- function(p, n) {
     i <- which(pos == p)
@@ -109,7 +110,9 @@ best_xi <- function(element, pos, points, started) {
     c(top("GKP", 1), top("DEF", d), top("MID", m), top("FWD", f))
   })
 
-  element[options[[which.max(map_dbl(options, ~ sum(points[.x])))]]]
+  total   <- map_dbl(options, ~ sum(points[.x]))
+  starters <- map_dbl(options, ~ sum(started[.x]))
+  element[options[[order(-total, -starters)[1]]]]
 }
 
 # Metrics -----------------------------------------------------------------------

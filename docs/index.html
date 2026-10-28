@@ -25,7 +25,11 @@
       <p id="status">Loading…</p>
       <nav class="tabs">
         <a class="tab" data-tab="leaderboard" href="#leaderboard">Leaderboard</a>
-        <a class="tab" data-tab="gameweek" href="#gameweek">Gameweek</a>
+        <div class="menu">
+          <button class="tab" data-tab="gameweek" type="button"
+                  aria-haspopup="true" aria-expanded="false">Gameweek</button>
+          <div class="menu-list" id="gameweek-menu" hidden></div>
+        </div>
         <div class="menu">
           <button class="tab" data-tab="metrics" type="button"
                   aria-haspopup="true" aria-expanded="false">Metrics</button>
