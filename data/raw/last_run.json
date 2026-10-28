@@ -1,7 +1,7 @@
 {
-  "run_at": "2026-10-26 13:13:55 UTC",
+  "run_at": "2026-10-28 13:06:10 UTC",
   "current_gw": 8,
-  "final_gws": 7,
+  "final_gws": 8,
   "managers": 15,
-  "api_calls": 48
+  "api_calls": 32
 }
