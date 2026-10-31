@@ -220,8 +220,9 @@ All computed per manager per gameweek, then summed for the season.
   bank (verified: all exactly 1000 at GW1 regardless of bank). So Total =
   value/10, Bank = bank/10, Squad = (value − bank)/10, in £m. Market value,
   not selling value.
-- Table shows the current (latest GW) Squad, Bank, Total; ranked highest
-  Total first. Breakdown: each GW's value and change vs the previous GW.
+- Table shows only the current (latest GW) total value (owner removed the
+  Squad/Bank columns); ranked highest first. Breakdown: each GW's total,
+  squad / bank split and change vs the previous GW.
   Data: `gw_value`; current values in `season_summary`.
 
 ## Chip rules 2026/27

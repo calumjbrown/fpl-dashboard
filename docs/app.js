@@ -656,12 +656,10 @@ const money = (x) => x.toFixed(1);
 METRICS.value = {
   label: "Squad value",
   note: "Current team value in £m: players at today's prices plus money in the " +
-        "bank (Total = Squad + Bank). This is FPL's market value, not what the " +
-        "players would sell for.",
+        "bank. Tap a manager for the squad / bank split each gameweek. This is " +
+        "FPL's market value, not what the players would sell for.",
   cols: [
-    { head: "Squad", value: (s) => money(s.squad_value) },
-    { head: "Bank", value: (s) => money(s.bank) },
-    { head: "Total", value: (s) => money(s.total_value), main: true },
+    { head: "Value", value: (s) => money(s.total_value), main: true },
   ],
   score: (s) => s.total_value,  // highest value at the top
   detail: valueDetail,
