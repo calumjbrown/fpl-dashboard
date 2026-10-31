@@ -121,7 +121,7 @@ errors instead of skipping quietly (the next run recovers).
    from FPL's `explain` (`gw_breakdown`), plus a captain/TC line. (A
    column-per-stat table was tried and rejected by the owner as messy.)
 3. **Metrics** – nav dropdown (Net transfer points, Cards, Missed points,
-   DFYTer Index, Pints); definitions agreed below.
+   DFYTer Index, Pints, Squad value); definitions agreed below.
 4. **Chip monitor** – which chips each manager has left and when they played them.
 
 **Live updates (Cloudflare Worker)** – `worker/fpl-live.js`, deployed by the
@@ -214,6 +214,15 @@ All computed per manager per gameweek, then summed for the season.
 - A gameweek only counts once its points are final: FPL event `finished`
   AND `data_checked` (owner changed this from "exclude the current GW"). `gw_pints` lists each loss with `joint_with`; season count is
   `pints` in `season_summary`. Ranked most pints first.
+
+**Squad value**
+- From each GW's picks `entry_history`: FPL's `value` already INCLUDES the
+  bank (verified: all exactly 1000 at GW1 regardless of bank). So Total =
+  value/10, Bank = bank/10, Squad = (value − bank)/10, in £m. Market value,
+  not selling value.
+- Table shows the current (latest GW) Squad, Bank, Total; ranked highest
+  Total first. Breakdown: each GW's value and change vs the previous GW.
+  Data: `gw_value`; current values in `season_summary`.
 
 ## Chip rules 2026/27
 

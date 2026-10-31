@@ -649,6 +649,35 @@ function pintsDetail(entry) {
   ])).join("");
 }
 
+// Squad value: current team value (players at today's prices + money in the
+// bank), in GBP m. Each manager expands to how it's moved gameweek by gameweek
+const money = (x) => x.toFixed(1);
+
+METRICS.value = {
+  label: "Squad value",
+  note: "Current team value in £m: players at today's prices plus money in the " +
+        "bank (Total = Squad + Bank). This is FPL's market value, not what the " +
+        "players would sell for.",
+  cols: [
+    { head: "Squad", value: (s) => money(s.squad_value) },
+    { head: "Bank", value: (s) => money(s.bank) },
+    { head: "Total", value: (s) => money(s.total_value), main: true },
+  ],
+  score: (s) => s.total_value,  // highest value at the top
+  detail: valueDetail,
+};
+
+function valueDetail(entry) {
+  const weeks = [...(byEntry.gw_value.get(entry) || [])].sort((a, b) => a.gw - b.gw);
+  return weeks.map((w, i) => {
+    // Change in total value since the previous gameweek, green / coral
+    const change = i ? Math.round((w.total_value - weeks[i - 1].total_value) * 10) / 10 : 0;
+    const lines = [line(`Squad ${money(w.squad_value)} · bank ${money(w.bank)}`,
+                        i ? tone(change, (change > 0 ? "+" : change < 0 ? "−" : "") + money(Math.abs(change))) : "")];
+    return gwBlock(w.gw, "£" + money(w.total_value) + "m", lines);
+  }).reverse().join("");
+}
+
 const pct = (x) => (x * 100).toFixed(1) + "%";
 
 function dfyterDetail(entry) {
@@ -897,7 +926,7 @@ function setMenu(name) {
 
 function indexData() {
   for (const key of ["gw_transfers", "transfer_detail", "card_detail", "gw_missed",
-                     "gw_dfyter", "gw_pints"]) {
+                     "gw_dfyter", "gw_pints", "gw_value"]) {
     byEntry[key] = groupBy(data[key], "entry");
   }
   byElement = groupBy(data.gw_breakdown, "element");

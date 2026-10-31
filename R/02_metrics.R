@@ -70,7 +70,9 @@ read_picks_file <- function(file) {
       chip            = x$active_chip %||% NA_character_,
       gw_points       = x$entry_history$points,
       transfer_cost   = x$entry_history$event_transfers_cost,
-      points_on_bench = x$entry_history$points_on_bench
+      points_on_bench = x$entry_history$points_on_bench,
+      team_value      = x$entry_history$value,  # in GBP 0.1m, includes the bank
+      bank            = x$entry_history$bank
     )
   )
 }
@@ -347,6 +349,17 @@ build_metrics <- function() {
     ungroup() %>%
     select(gw, entry, points = gw_points, joint_with)
 
+  # 6. Squad value --------------------------------------------------------------
+  # FPL's team value per GW, in GBP m. FPL's `value` already includes the money
+  # in the bank (checked: everyone is exactly 100.0 at GW1 whatever their
+  # bank), so squad = value - bank. It's the players' current market prices,
+  # not what the manager would get for selling them
+  gw_value <- gw_info %>%
+    transmute(gw, entry,
+              squad_value = (team_value - bank) / 10,
+              bank        = bank / 10,
+              total_value = team_value / 10)
+
   # League position after each GW ----------------------------------------------
   # For the leaderboard (rank, movement, total) and the form sparkline.
   # Running total = cumulative (GW score - hits), using the live GW score
@@ -398,6 +411,9 @@ build_metrics <- function() {
       by = "entry"
     ) %>%
     left_join(gw_pints %>% count(entry, name = "pints"), by = "entry") %>%
+    left_join(gw_value %>% group_by(entry) %>% slice_max(gw, n = 1) %>% ungroup() %>%
+                select(entry, squad_value, bank, total_value),
+              by = "entry") %>%  # current value = latest GW
     mutate(across(where(is.numeric) & !entry, ~ replace_na(.x, 0)))
 
   list(
@@ -410,6 +426,7 @@ build_metrics <- function() {
     gw_missed       = add_names(gw_missed),
     gw_dfyter       = add_names(gw_dfyter),
     gw_pints        = add_names(gw_pints),
+    gw_value        = add_names(gw_value),
     chips_played    = add_names(chips_played),
     league_history  = league_history,
     # For the Gameweek tab: each manager's GW score and their 15 picks.
@@ -431,7 +448,7 @@ metrics <- build_metrics()
 dir_create(out_dir)
 walk(
   c("season_summary", "gw_transfers", "transfer_detail", "gw_cards",
-    "card_detail", "gw_missed", "gw_dfyter", "gw_pints", "chips_played"),
+    "card_detail", "gw_missed", "gw_dfyter", "gw_pints", "gw_value", "chips_played"),
   ~ write_csv(metrics[[.x]], path(out_dir, paste0(.x, ".csv")))
 )
 
