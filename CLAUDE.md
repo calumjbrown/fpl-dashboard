@@ -89,6 +89,12 @@ mini-league. No login. All data comes from the public FPL API.
 Known gap: if FPL starts updating partway through an ingest run, the run
 errors instead of skipping quietly (the next run recovers).
 
+**Caching:** GitHub Pages serves files with `max-age=600`, so browsers kept
+old `app.js`/`style.css` for up to 10 min after a push (owner saw an old
+layout). `index.html` now loads both with `?v=<minute number>` (`ASSET_V`),
+so a release reaches browsers within a minute; `dashboard.json` is fetched
+with `?t=<now>`. `index.html` itself can still be up to 10 min old.
+
 ## Dashboard tabs
 
 1. **Custom leaderboard** – rank (with ▲▼ movement), manager, Form, GW,

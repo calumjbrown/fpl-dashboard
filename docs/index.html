@@ -11,7 +11,14 @@
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-  <link rel="stylesheet" href="style.css">
+  <!-- Load the stylesheet and script with a version that changes every
+       minute, so browsers pick up a new release within a minute instead of
+       reusing a copy for up to 10 minutes (GitHub Pages' cache setting) -->
+  <script>
+    window.ASSET_V = Math.floor(Date.now() / 60000);
+    document.write('<link rel="stylesheet" href="style.css?v=' + ASSET_V + '">');
+  </script>
+  <noscript><link rel="stylesheet" href="style.css"></noscript>
 </head>
 <body>
   <header class="top">
@@ -47,6 +54,6 @@
     <section id="tab-chips" hidden></section>
   </main>
 
-  <script src="app.js"></script>
+  <script>document.write('<script src="app.js?v=' + ASSET_V + '"><\/script>');</script>
 </body>
 </html>
