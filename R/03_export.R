@@ -144,7 +144,7 @@ run_export <- function() {
     card_detail     = metrics$card_detail,
     gw_missed       = metrics$gw_missed,
     gw_dfyter       = metrics$gw_dfyter,
-    gw_pints        = metrics$gw_pints %>% select(entry, gw, net_points, joint_with),
+    gw_pints        = metrics$gw_pints %>% select(entry, gw, points, joint_with),
     # Gameweek tab: current GW only
     gw_summary      = gw_summary,
     gw_lineups      = metrics$squads %>%

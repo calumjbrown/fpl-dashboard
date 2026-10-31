@@ -111,7 +111,9 @@ errors instead of skipping quietly (the next run recovers).
    picked by anyone in the league, by GW points (ties: most owned, then
    name), with Owned count; expands to who picked him (C/V/TC badge, points
    earned them incl. captain multiplier, or "bench"). Built in the browser
-   from `gw_lineups` – no extra data. **Leaderboard**: ranked by points after hits; each manager
+   from `gw_lineups` – no extra data. **Leaderboard**: ranked and shown on
+   points **before** transfer hits (owner's rule; Hits column shown for
+   reference). The main Leaderboard tab still deducts hits (official totals); each manager
    expands to their XI and bench with points per player (FPL's
    `pick_multiplier` applied, so captain ×2 and auto-subs are reflected).
    Data: `gw_summary` and `gw_lineups` in `dashboard.json`. Each player in
@@ -205,7 +207,9 @@ All computed per manager per gameweek, then summed for the season.
 
 **Pints** (owner's own metric)
 - A manager downs a pint for every gameweek they lose: lowest GW score in
-  the league, after transfer hits (`gw_points − transfer_cost`, live-calculated).
+  the league **before transfer hits** (`gw_points`, live-calculated; owner
+  changed this from after-hits, which moved the GW3 pint from Jamie
+  Stovin-Bradford to Matthew Taberham). `gw_pints$points` is that score.
 - Joint-bottom: everyone tied drinks (assumption – owner can change).
 - A gameweek only counts once its points are final: FPL event `finished`
   AND `data_checked` (owner changed this from "exclude the current GW"). `gw_pints` lists each loss with `joint_with`; season count is

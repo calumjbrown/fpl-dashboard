@@ -405,15 +405,16 @@ function renderGameweek() {
 }
 
 function gwLeaderboard(provisional) {
-  const sorted = [...data.gw_summary].sort((a, b) => b.net_points - a.net_points);
-  const ranks = tiedRanks(sorted, (s) => s.net_points);
+  // Ranked on points BEFORE transfer hits (owner's rule); hits shown alongside
+  const sorted = [...data.gw_summary].sort((a, b) => b.gw_points - a.gw_points);
+  const ranks = tiedRanks(sorted, (s) => s.gw_points);
 
   const rows = sorted.map((s, i) => `<details data-key="m${s.entry}">
       <summary class="row toggle">
         <span class="rank">${ranks[i]}</span>
         ${who(s)}
         <span class="num">${hit(s.transfer_cost)}</span>
-        <span class="num strong">${s.net_points}</span>
+        <span class="num strong">${s.gw_points}</span>
       </summary>
       <div class="detail">${lineupDetail(s, live.byEntry.get(s.entry))}</div>
     </details>`);
@@ -424,7 +425,9 @@ function gwLeaderboard(provisional) {
       </div>
       ${rows.join("")}
     </div>
-    <p class="note">Points after transfer hits.${provisional} Tap a manager to see their team.</p>`;
+    <p class="note">Ranked on points before transfer hits; hits are shown but
+      don't count here (they still come off the season total).${provisional}
+      Tap a manager to see their team.</p>`;
 }
 
 // Every player picked by anyone in the league this gameweek, highest score
@@ -625,7 +628,7 @@ const METRICS = {
 // METRICS is defined because it refers to the current gameweek
 METRICS.pints = {
   label: "Pints",
-  note: "Lose a gameweek (lowest score in the league after transfer hits) and " +
+  note: "Lose a gameweek (lowest score in the league, before transfer hits) and " +
         "you down a pint. Joint-bottom: everyone tied drinks. A gameweek " +
         "counts once its points are final (bonus and corrections applied, " +
         "usually the day after the last match).",
@@ -641,7 +644,7 @@ function pintsDetail(entry) {
   if (!losses.length) return `<p class="empty">No pints yet. Clean record.</p>`;
 
   return losses.map((p) => gwBlock(p.gw, "1 pint", [
-    line(`Lowest score: ${p.net_points} pts` +
+    line(`Lowest score: ${p.points} pts` +
          (p.joint_with ? ` (joint with ${esc(p.joint_with)})` : ""), ""),
   ])).join("");
 }
