@@ -18,12 +18,33 @@
     {
       "entry": 7984273,
       "entry_name": "Isidor's Bane",
-      "event_total": 2,
+      "event_total": 10,
       "last_rank": 1,
       "player_name": "matthew henderson",
       "rank": 1,
       "rank_sort": 1,
-      "total": 560
+      "total": 568
+    },
+    {
+      "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/8186839/b8ef6edc-d03a-463e-8592-50e43e9903bc.png",
+      "entry": 5611625,
+      "entry_name": "Barnaby's XI",
+      "event_total": 9,
+      "last_rank": 3,
+      "player_name": "Barnaby Hodgkins",
+      "rank": 2,
+      "rank_sort": 2,
+      "total": 547
+    },
+    {
+      "entry": 905504,
+      "entry_name": "Makepeaces Mavericks",
+      "event_total": 10,
+      "last_rank": 4,
+      "player_name": "Nic Makepeace",
+      "rank": 3,
+      "rank_sort": 3,
+      "total": 546
     },
     {
       "entry": 8605433,
@@ -31,40 +52,19 @@
       "event_total": 2,
       "last_rank": 2,
       "player_name": "Eliott Wolstenholme",
-      "rank": 2,
-      "rank_sort": 2,
-      "total": 542
-    },
-    {
-      "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/8186839/b8ef6edc-d03a-463e-8592-50e43e9903bc.png",
-      "entry": 5611625,
-      "entry_name": "Barnaby's XI",
-      "event_total": 1,
-      "last_rank": 3,
-      "player_name": "Barnaby Hodgkins",
-      "rank": 3,
-      "rank_sort": 3,
-      "total": 539
-    },
-    {
-      "entry": 905504,
-      "entry_name": "Makepeaces Mavericks",
-      "event_total": 2,
-      "last_rank": 4,
-      "player_name": "Nic Makepeace",
       "rank": 4,
       "rank_sort": 4,
-      "total": 538
+      "total": 542
     },
     {
       "entry": 5618693,
       "entry_name": "Brown Town",
-      "event_total": 3,
+      "event_total": 11,
       "last_rank": 5,
       "player_name": "Calum Brown",
       "rank": 5,
       "rank_sort": 5,
-      "total": 532
+      "total": 540
     },
     {
       "entry": 168599,
@@ -77,34 +77,45 @@
       "total": 519
     },
     {
+      "entry": 8186920,
+      "entry_name": "Sesko Meal Deal",
+      "event_total": 9,
+      "last_rank": 8,
+      "player_name": "Christopher Loadman",
+      "rank": 7,
+      "rank_sort": 7,
+      "total": 518
+    },
+    {
       "entry": 1190912,
       "entry_name": "tbc",
       "event_total": 1,
       "last_rank": 7,
       "player_name": "Matthew Kemp",
-      "rank": 7,
-      "rank_sort": 7,
-      "total": 515
-    },
-    {
-      "entry": 8186920,
-      "entry_name": "Sesko Meal Deal",
-      "event_total": 1,
-      "last_rank": 8,
-      "player_name": "Christopher Loadman",
       "rank": 8,
       "rank_sort": 8,
-      "total": 510
+      "total": 515
     },
     {
       "entry": 1751789,
       "entry_name": "STTTWOTL FC",
-      "event_total": 2,
+      "event_total": 10,
       "last_rank": 9,
       "player_name": "Emon Keshavarz",
       "rank": 9,
       "rank_sort": 9,
-      "total": 498
+      "total": 506
+    },
+    {
+      "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/6166238/49d27b4b-11b5-419c-bab9-c2ab0af62d32.png",
+      "entry": 6777022,
+      "entry_name": "Rambunctious",
+      "event_total": 10,
+      "last_rank": 11,
+      "player_name": "David Glanville",
+      "rank": 10,
+      "rank_sort": 10,
+      "total": 500
     },
     {
       "entry": 3072794,
@@ -112,20 +123,9 @@
       "event_total": 1,
       "last_rank": 10,
       "player_name": "Joe Boyd-Morritt",
-      "rank": 10,
-      "rank_sort": 10,
-      "total": 496
-    },
-    {
-      "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/6166238/49d27b4b-11b5-419c-bab9-c2ab0af62d32.png",
-      "entry": 6777022,
-      "entry_name": "Rambunctious",
-      "event_total": 2,
-      "last_rank": 11,
-      "player_name": "David Glanville",
       "rank": 11,
       "rank_sort": 11,
-      "total": 492
+      "total": 496
     },
     {
       "entry": 5408113,
@@ -151,22 +151,22 @@
       "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/5868715/6c59abbd-c06c-47b4-9862-e22275eecbdb.png",
       "entry": 5868715,
       "entry_name": "Jersey Barnstormers",
-      "event_total": 1,
+      "event_total": 9,
       "last_rank": 14,
       "player_name": "Adam Hodgkins",
       "rank": 14,
       "rank_sort": 14,
-      "total": 456
+      "total": 464
     },
     {
       "entry": 8320512,
       "entry_name": "fcmcp",
-      "event_total": 2,
+      "event_total": 10,
       "last_rank": 15,
       "player_name": "Alex Macpherson",
       "rank": 15,
       "rank_sort": 15,
-      "total": 379
+      "total": 387
     }
   ]
 }
