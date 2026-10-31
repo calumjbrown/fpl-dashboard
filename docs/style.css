@@ -94,6 +94,14 @@ h1 .logo { height: 40px; width: auto; }
   vertical-align: 1px;
 }
 
+/* While live scores are coming in, the dot gently pulses */
+#status.live::before { animation: pulse 2s ease-in-out infinite; }
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(255, 255, 255, .6); }
+  50%      { box-shadow: 0 0 0 5px rgba(0, 168, 90, .25); }
+}
+
 /* Tabs: a translucent strip with rounded top corners sitting on the bottom
    edge of the header. The active tab takes the page colour, so it looks
    joined to the page below (like a folder tab) */
@@ -477,6 +485,18 @@ details[open] summary.toggle::after { transform: translateY(-30%) rotate(-135deg
   color: var(--accent);
   font-size: .68rem;
   font-weight: 700;
+  vertical-align: 1px;
+}
+
+/* "sub on" / "subbed off" next to a player after a provisional auto-sub */
+.tag {
+  display: inline-block;
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: .66rem;
+  font-weight: 600;
   vertical-align: 1px;
 }
 

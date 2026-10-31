@@ -51,6 +51,34 @@ read_player_breakdown <- function(gw, elements) {
     summarise(value = sum(value), points = sum(points), .groups = "drop")
 }
 
+# Current GW fixtures for provisional bonus and auto-subs on the website:
+# which teams play, whether each match has started, ended (finished_provisional)
+# and had its bonus confirmed (finished), plus every player's live BPS
+read_gw_fixtures <- function(gw) {
+  file <- path(raw_dir, "fixtures", sprintf("gw_%02d.json", gw))
+  if (!file_exists(file)) return(list(fixtures = tibble(), bps = tibble()))
+  fx <- fromJSON(file, simplifyVector = FALSE)
+
+  fixtures <- fx %>%
+    map(~ tibble(fixture = .x$id, team_h = .x$team_h, team_a = .x$team_a,
+                 started = isTRUE(.x$started),
+                 ended = isTRUE(.x$finished_provisional),
+                 bonus_final = isTRUE(.x$finished))) %>%
+    list_rbind()
+
+  bps <- fx %>%
+    map(function(f) {
+      s <- keep(f$stats, ~ .x$identifier == "bps")
+      if (!length(s)) return(NULL)
+      c(s[[1]]$h, s[[1]]$a) %>%
+        map(~ tibble(fixture = f$id, element = .x$element, bps = .x$value)) %>%
+        list_rbind()
+    }) %>%
+    list_rbind()
+
+  list(fixtures = fixtures, bps = bps)
+}
+
 to_json <- function(x) {
   toJSON(x, dataframe = "rows", na = "null", auto_unbox = TRUE, digits = NA)
 }
@@ -67,6 +95,8 @@ run_export <- function() {
   standings <- read_cached(path(raw_dir, "standings.json"))
 
   current_gw <- max(events$id[events$finished | events$is_current])
+
+  gw_fx <- read_gw_fixtures(current_gw)
 
   # Current GW score per manager, after hits (live during the GW)
   gw_summary <- metrics$gw_points %>%
@@ -99,9 +129,15 @@ run_export <- function() {
     league      = standings$league$name,
     current_gw  = current_gw,
     gw_finished = events$finished[events$id == current_gw],
+    # Final = FPL has processed the GW (bonus, auto-subs, vice-captain all
+    # applied in the picks), so the website shows FPL's figures as they are
+    gw_final    = events$finished[events$id == current_gw] &&
+                  events$data_checked[events$id == current_gw],
     standings   = leaderboard,
     season_summary  = metrics$season_summary,
-    league_history  = metrics$league_history %>% select(entry, gw, league_rank),
+    league_history  = metrics$league_history %>% select(entry, gw, total, league_rank),
+    gw_fixtures     = gw_fx$fixtures,
+    gw_bps          = gw_fx$bps,
     gw_transfers    = metrics$gw_transfers,
     transfer_detail = metrics$transfer_detail,
     gw_cards        = metrics$gw_cards,

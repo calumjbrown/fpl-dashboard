@@ -143,6 +143,249 @@ function sparkline(entry) {
   </svg>`;
 }
 
+// Live gameweek scoring --------------------------------------------------------
+// During a gameweek FPL doesn't add bonus until ~1 hour after each match, and
+// doesn't apply auto-subs or pass the armband to the vice-captain until the
+// whole gameweek ends. So the current gameweek is scored here, provisionally:
+//
+// Bonus: in each match that has started but whose bonus FPL hasn't confirmed,
+//   the top three by BPS get 3 / 2 / 1. Ties share the higher place, which
+//   gives FPL's tie rules (3,3,1 / 3,2,2 / 3,2,1,1).
+// Auto-subs: a starter is only subbed off once every match his team plays
+//   this gameweek has ended and he played 0 minutes (no match at all counts
+//   as ended). The bench is tried in order; the bench GK only replaces the GK
+//   and the formation must stay legal (1 GKP, 3+ DEF, 2+ MID, 1+ FWD). A bench
+//   player only comes on if he has played; if one whose match hasn't ended yet
+//   would be next, the sub waits rather than guess.
+// Armband: passes to the vice-captain only once the captain's matches have
+//   ended without him playing, and the vice (in the XI) has played.
+// No subs in Bench Boost weeks. Once FPL has finalised the gameweek
+// (data.gw_final) its own figures are used as they are.
+
+let live = null;  // set by computeLive(): scored teams and player points
+
+function computeLive() {
+  const fixtures = data.gw_fixtures || [];
+  const teamFixtures = groupBy(fixtures.flatMap((f) =>
+    [{ team: f.team_h, ...f }, { team: f.team_a, ...f }]), "team");
+
+  // Provisional bonus, and each player's BPS, from each match
+  const provBonus = new Map(), bps = new Map();
+  for (const [fixture, rows] of groupBy(data.gw_bps || [], "fixture")) {
+    for (const r of rows) bps.set(r.element, (bps.get(r.element) || 0) + r.bps);
+    const f = fixtures.find((x) => x.fixture === fixture);
+    if (data.gw_final || !f || !f.started || f.bonus_final) continue;
+    const sorted = [...rows].sort((a, b) => b.bps - a.bps);
+    for (const r of sorted) {
+      const place = sorted.findIndex((x) => x.bps === r.bps) + 1;  // ties share
+      const bonus = Math.max(0, 4 - place);
+      if (bonus) provBonus.set(r.element, (provBonus.get(r.element) || 0) + bonus);
+    }
+  }
+
+  const teamDone = (team) => (teamFixtures.get(team) || []).every((f) => f.ended);
+  const summary = new Map(data.gw_summary.map((s) => [s.entry, s]));
+
+  live = { provBonus, bps, byEntry: new Map() };
+  for (const [entry, picks] of groupBy(data.gw_lineups, "entry")) {
+    const s = summary.get(entry) || {};
+    live.byEntry.set(entry, scoreTeam(picks, s.chip, s.transfer_cost || 0, teamDone));
+  }
+}
+
+const POS_ORDER = ["GKP", "DEF", "MID", "FWD"];
+
+// One manager's gameweek: returns the lineup rows (XI then bench, each with
+// its points `pts`, multiplier `mult` and sub flags), the total and net of hits
+function scoreTeam(picks, chip, hits, teamDone) {
+  const rows = [...picks]
+    .sort((a, b) => a.position - b.position)
+    .map((p) => ({ ...p, provBonus: live.provBonus.get(p.element) || 0,
+                   pts: p.points + (live.provBonus.get(p.element) || 0),
+                   subIn: false, subOut: false }));
+  const total = (rs) => rs.reduce((sum, r) => sum + r.pts * r.mult, 0);
+
+  // Finalised by FPL: subs, vice-captain and bonus are already in its figures
+  if (data.gw_final) {
+    for (const r of rows) r.mult = r.pick_multiplier;
+    const xi = rows.filter((r) => r.position <= 11), bench = rows.filter((r) => r.position > 11);
+    const gross = total(rows);
+    return { rows: [...xi, ...bench], xi, bench, gross, net: gross - hits };
+  }
+
+  const played = (p) => p.minutes > 0;
+  const noShow = (p) => !played(p) && teamDone(p.team_id);  // match(es) over, didn't play
+  const legal = (team) => {
+    const n = (pos) => team.filter((p) => p.pos === pos).length;
+    return n("GKP") === 1 && n("DEF") >= 3 && n("MID") >= 2 && n("FWD") >= 1;
+  };
+
+  let xi = rows.slice(0, 11);
+  const bench = rows.slice(11);
+  const bb = chip === "bboost";
+
+  if (!bb) {
+    for (const out of xi.filter(noShow)) {
+      for (const cand of bench) {
+        if (cand.subIn || (out.pos === "GKP") !== (cand.pos === "GKP")) continue;
+        const trial = xi.map((p) => (p === out ? cand : p));
+        if (!legal(trial)) continue;
+        if (played(cand)) { xi = trial; cand.subIn = true; out.subOut = true; break; }
+        if (teamDone(cand.team_id)) continue;  // didn't play: try the next one
+        break;                                 // might still play: wait
+      }
+    }
+  }
+
+  // Armband: captain unless he's a confirmed no-show, then the vice if he's
+  // in the XI and has played (if the vice is still to play, nobody yet)
+  const capMult = chip === "3xc" ? 3 : 2;
+  const cap = rows.find((p) => p.is_captain), vice = rows.find((p) => p.is_vice_captain);
+  const wearer = cap && !noShow(cap) ? cap
+               : vice && xi.includes(vice) && played(vice) ? vice : null;
+
+  const counted = new Set(bb ? rows : xi);
+  for (const r of rows) r.mult = counted.has(r) ? (r === wearer ? capMult : 1) : 0;
+
+  // XI in position order (a sub takes his own position's place), then bench
+  const xiSorted = [...xi].sort((a, b) =>
+    POS_ORDER.indexOf(a.pos) - POS_ORDER.indexOf(b.pos) || a.position - b.position);
+  const benchRows = rows.filter((r) => !xi.includes(r));
+  const gross = total(rows);
+  return { rows: [...xiSorted, ...benchRows], xi: xiSorted, bench: benchRows,
+           gross, net: gross - hits };
+}
+
+// Put the live scores into the tables the tabs read: GW scores, and the
+// league table (total = last GW's total + live GW score, rank and movement
+// recalculated) and the current GW's point on the form sparkline
+function applyLive() {
+  const gw = data.current_gw;
+  const prev = new Map(data.league_history.filter((h) => h.gw === gw - 1)
+    .map((h) => [h.entry, h]));
+
+  for (const s of data.gw_summary) {
+    const t = live.byEntry.get(s.entry);
+    if (t) { s.gw_points = t.gross; s.net_points = t.net; }
+  }
+
+  const net = new Map(data.gw_summary.map((s) => [s.entry, s.net_points]));
+  for (const s of data.standings) {
+    if (!net.has(s.entry)) continue;
+    s.event_total = net.get(s.entry);
+    s.total = (prev.get(s.entry)?.total || 0) + s.event_total;
+    s.last_rank = prev.get(s.entry)?.league_rank ?? null;
+  }
+  data.standings.sort((a, b) => b.total - a.total);
+  data.standings.forEach((s, i, all) => { s.rank = all.findIndex((x) => x.total === s.total) + 1; });
+
+  for (const h of data.league_history) {
+    if (h.gw !== gw) continue;
+    const s = data.standings.find((x) => x.entry === h.entry);
+    if (s) { h.total = s.total; h.league_rank = s.rank; }
+  }
+}
+
+// Live updates -------------------------------------------------------------------
+// While the gameweek is in progress, fetch FPL's live player scores and the
+// fixtures through our Cloudflare Worker (worker/fpl-live.js), merge them into
+// the data and re-score the gameweek with the rules above. Every 60 seconds
+// while a match is on, every 5 minutes otherwise; paused while the page is
+// hidden; stops once FPL finalises the gameweek. If the Worker can't be
+// reached the page simply keeps the data it already has.
+
+const LIVE_URL = "https://fpl-live.calubrow.workers.dev";
+let liveAt = null;     // when live data last arrived
+let liveTimer = null;
+let liveBusy = false;
+
+async function pollLive() {
+  clearTimeout(liveTimer);
+  if (data.gw_final || liveBusy) return;
+  if (document.hidden) { liveTimer = setTimeout(pollLive, 60000); return; }
+
+  let matchOn = false;
+  liveBusy = true;
+  try {
+    matchOn = await fetchLive();
+  } catch (err) {
+    // Worker or FPL unavailable (FPL goes offline while it updates): try later
+  } finally {
+    liveBusy = false;
+  }
+  liveTimer = setTimeout(pollLive, matchOn ? 60000 : 300000);
+}
+
+// Fetch, merge, re-score and redraw. Returns true if a match is in progress
+async function fetchLive() {
+  const get = (p) => fetch(`${LIVE_URL}/${p}`).then((r) => {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  });
+  const gw = data.current_gw;
+  const [scores, fixtures] = await Promise.all([get(`event/${gw}/live/`), get(`fixtures/?event=${gw}`)]);
+
+  mergeLive(scores, fixtures);
+  computeLive();
+  applyLive();
+  liveAt = new Date();
+  rerender("leaderboard");
+  rerender("gameweek");
+  showStatus();
+  return fixtures.some((f) => f.started && !f.finished_provisional);
+}
+
+// Put FPL's live answers into the same shape 03_export.R produces
+function mergeLive(scores, fixtures) {
+  const byId = new Map(scores.elements.map((e) => [e.id, e]));
+
+  for (const p of data.gw_lineups) {
+    const e = byId.get(p.element);
+    if (e) { p.minutes = e.stats.minutes; p.points = e.stats.total_points; }
+  }
+
+  // Points breakdown per player and stat, summed over a double gameweek
+  const rows = new Map();
+  for (const id of new Set(data.gw_lineups.map((p) => p.element))) {
+    for (const f of byId.get(id)?.explain || []) {
+      for (const s of f.stats) {
+        const key = id + "|" + s.identifier;
+        const r = rows.get(key) || { element: id, stat: s.identifier, value: 0, points: 0 };
+        r.value += s.value;
+        r.points += s.points;
+        rows.set(key, r);
+      }
+    }
+  }
+  data.gw_breakdown = [...rows.values()];
+  byElement = groupBy(data.gw_breakdown, "element");
+
+  data.gw_fixtures = fixtures.map((f) => ({
+    fixture: f.id, team_h: f.team_h, team_a: f.team_a, started: !!f.started,
+    ended: !!f.finished_provisional, bonus_final: !!f.finished,
+  }));
+  data.gw_bps = fixtures.flatMap((f) => {
+    const s = (f.stats || []).find((x) => x.identifier === "bps");
+    return s ? [...s.h, ...s.a].map((x) => ({ fixture: f.id, element: x.element, bps: x.value })) : [];
+  });
+}
+
+// Redraw a tab without collapsing the rows someone has expanded
+function rerender(tab) {
+  const section = document.getElementById("tab-" + tab);
+  const open = new Set([...section.querySelectorAll("details[open][data-key]")]
+    .map((d) => d.dataset.key));
+  render(tab);
+  for (const d of section.querySelectorAll("details[data-key]")) {
+    if (open.has(d.dataset.key)) d.open = true;
+  }
+}
+
+// Coming back to the page: fetch straight away rather than wait
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && liveAt) pollLive();
+});
+
 // Gameweek ------------------------------------------------------------------
 // The current gameweek only: ranked by points after hits, each manager
 // expanding to their lineup
@@ -152,26 +395,27 @@ function sparkline(entry) {
 const GW_VIEWS = { leaderboard: "Leaderboard", players: "Players" };
 
 function renderGameweek() {
-  const provisional = data.gw_finished ? ""
-    : " The gameweek is still in progress, so points and auto-subs are provisional.";
+  const provisional = data.gw_final ? ""
+    : " Until FPL finalises the gameweek, bonus (from live BPS), auto-subs and " +
+      "vice-captain switches are provisional; subs only happen once a " +
+      "player's match has ended.";
 
   return `<h2 class="page-title">Gameweek ${data.current_gw} · ${GW_VIEWS[gwView]}</h2>
     ${gwView === "players" ? gwPlayers(provisional) : gwLeaderboard(provisional)}`;
 }
 
 function gwLeaderboard(provisional) {
-  const lineups = groupBy(data.gw_lineups, "entry");
   const sorted = [...data.gw_summary].sort((a, b) => b.net_points - a.net_points);
   const ranks = tiedRanks(sorted, (s) => s.net_points);
 
-  const rows = sorted.map((s, i) => `<details>
+  const rows = sorted.map((s, i) => `<details data-key="m${s.entry}">
       <summary class="row toggle">
         <span class="rank">${ranks[i]}</span>
         ${who(s)}
         <span class="num">${hit(s.transfer_cost)}</span>
         <span class="num strong">${s.net_points}</span>
       </summary>
-      <div class="detail">${lineupDetail(s, lineups.get(s.entry) || [])}</div>
+      <div class="detail">${lineupDetail(s, live.byEntry.get(s.entry))}</div>
     </details>`);
 
   return `<div class="list" style="--n:2">
@@ -189,11 +433,14 @@ function gwPlayers(provisional) {
   const managers = new Map(data.standings.map((s) => [s.entry, s.manager]));
   const leagueSize = data.standings.length;
 
-  const players = [...groupBy(data.gw_lineups, "element").values()]
+  // Each manager's scored row for every player they picked (live points,
+  // multiplier after subs and armband)
+  const allRows = [...live.byEntry.values()].flatMap((t) => t.rows);
+  const players = [...groupBy(allRows, "element").values()]
     .map((picks) => ({ ...picks[0], picks }))
-    .sort((a, b) => b.points - a.points || b.picks.length - a.picks.length ||
+    .sort((a, b) => b.pts - a.pts || b.picks.length - a.picks.length ||
                     a.player.localeCompare(b.player));
-  const ranks = tiedRanks(players, (p) => p.points);
+  const ranks = tiedRanks(players, (p) => p.pts);
 
   // One line per manager who picked him: armband badge, and the points he
   // earned them (x2 / x3 as captain), or "bench" if he didn't count
@@ -203,18 +450,19 @@ function gwPlayers(provisional) {
       const tc = data.gw_summary.find((s) => s.entry === k.entry)?.chip === "3xc";
       const armband = k.is_captain ? (tc ? "TC" : "C") : k.is_vice_captain ? "V" : "";
       const label = esc(managers.get(k.entry)) +
-                    (armband ? ` <span class="badge">${armband}</span>` : "");
-      return k.pick_multiplier > 0
-        ? line(label, k.points * k.pick_multiplier)
-        : line(label, "bench", "benched");
+                    (armband ? ` <span class="badge">${armband}</span>` : "") +
+                    (k.subIn ? ` <span class="tag">sub on</span>` : "");
+      return k.mult > 0
+        ? line(label, k.pts * k.mult)
+        : line(label, k.subOut ? "subbed off" : "bench", "benched");
     });
 
-  const rows = players.map((p, i) => `<details>
+  const rows = players.map((p, i) => `<details data-key="e${p.element}">
       <summary class="row toggle">
         <span class="rank">${ranks[i]}</span>
         <span class="who"><b>${esc(p.player)}</b><small>${p.pos} · ${esc(p.club)}</small></span>
         <span class="num">${p.picks.length}</span>
-        <span class="num strong">${p.points}</span>
+        <span class="num strong">${p.pts}</span>
       </summary>
       <div class="detail lineup">
         ${block(`Picked by ${p.picks.length} of ${leagueSize}`, "", pickedBy(p))}
@@ -228,8 +476,8 @@ function gwPlayers(provisional) {
       ${rows.join("")}
     </div>
     <p class="note">Every player picked by someone in the league this gameweek. Pts is
-      the player's own score; tap a player to see who picked him and what he
-      earned each of them (doubled as captain).${provisional}</p>`;
+      the player's own score, including provisional bonus; tap a player to see
+      who picked him and what he earned each of them (doubled as captain).${provisional}</p>`;
 }
 
 // Names for FPL's points categories, in FPL's order (used to sort too)
@@ -250,15 +498,13 @@ const STATS = {
 };
 const statOrder = Object.keys(STATS);
 
-// Starting XI and bench. Each player expands to his points breakdown: one
-// line per stat with its count and the points it earned. FPL has already
-// applied auto-subs to the order, and pick_multiplier is 0 for anyone left
-// on the bench (so their points don't count)
-function lineupDetail(s, picks) {
-  const sorted = [...picks].sort((a, b) => a.position - b.position);
-  const xi = sorted.filter((p) => p.position <= 11);
-  const bench = sorted.filter((p) => p.position > 11);
-  const counted = (ps) => ps.reduce((sum, p) => sum + p.points * p.pick_multiplier, 0);
+// Starting XI and bench (after provisional auto-subs, see scoreTeam). Each
+// player expands to his points breakdown: one line per stat with its count
+// and the points it earned, plus provisional bonus and the captain multiplier
+function lineupDetail(s, team) {
+  if (!team) return `<p class="empty">No team this gameweek.</p>`;
+  const { xi, bench } = team;
+  const counted = (ps) => ps.reduce((sum, p) => sum + p.pts * p.mult, 0);
 
   const breakdown = (p) => {
     const stats = [...(byElement.get(p.element) || [])]
@@ -267,13 +513,20 @@ function lineupDetail(s, picks) {
       `<li><span>${STATS[b.stat] || b.stat}</span><span>${b.value}</span>` +
       `<span>${b.points < 0 ? tone(b.points) : b.points}</span></li>`);  // only losses coloured
 
-    // Captain / Triple Captain extra points, and bench status
-    if (p.pick_multiplier > 1) {
-      const label = p.pick_multiplier === 3 ? "Triple Captain" : "Captain";
-      rows.push(`<li><span>${label}</span><span>×${p.pick_multiplier}</span>` +
-                `<span>+${p.points * (p.pick_multiplier - 1)}</span></li>`);
+    // Provisional bonus (count = his BPS), captain multiplier, bench status
+    if (p.provBonus) {
+      rows.push(`<li><span>Bonus (provisional)</span><span>${live.bps.get(p.element)} BPS</span>` +
+                `<span>${p.provBonus}</span></li>`);
     }
-    if (p.pick_multiplier === 0) {
+    if (p.mult > 1) {
+      const label = p.mult === 3 ? "Triple Captain" : p.is_captain ? "Captain" : "Vice-captain (captain didn't play)";
+      rows.push(`<li><span>${label}</span><span>×${p.mult}</span>` +
+                `<span>+${p.pts * (p.mult - 1)}</span></li>`);
+    }
+    if (p.subIn) rows.push(`<li><span>Auto-sub: came on</span><span></span><span></span></li>`);
+    if (p.subOut) {
+      rows.push(`<li><span>Auto-sub: didn't play, subbed off</span><span></span><span></span></li>`);
+    } else if (p.mult === 0) {
       rows.push(`<li><span>Benched, not counted</span><span></span><span></span></li>`);
     }
 
@@ -286,11 +539,13 @@ function lineupDetail(s, picks) {
   const player = (p) => {
     const armband = p.is_captain ? (s.chip === "3xc" ? "TC" : "C")
                   : p.is_vice_captain ? "V" : "";
-    const pts = p.pick_multiplier > 0 ? p.points * p.pick_multiplier : p.points;
-    return `<li class="player${p.pick_multiplier > 0 ? "" : " benched"}"><details>
+    const pts = p.mult > 0 ? p.pts * p.mult : p.pts;
+    const tag = p.subIn ? ` <span class="tag">sub on</span>`
+              : p.subOut ? ` <span class="tag">subbed off</span>` : "";
+    return `<li class="player${p.mult > 0 ? "" : " benched"}"><details data-key="p${s.entry}-${p.element}">
       <summary>
         <span><span class="pos">${p.pos}</span>${esc(p.player)} <small>${esc(p.club)}</small>` +
-        `${armband ? ` <span class="badge">${armband}</span>` : ""}</span>
+        `${armband ? ` <span class="badge">${armband}</span>` : ""}${tag}</span>
         <span class="num">${pts}</span>
       </summary>
       ${breakdown(p)}
@@ -650,10 +905,23 @@ function showStatus() {
   const updated = new Date(data.updated).toLocaleString("en-GB", {
     weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
   });
-  // current_gw is the latest gameweek that has started, including one in progress
+  // current_gw is the latest gameweek that has started, including one in progress.
+  // With live data, say how long ago it arrived (refreshed every 15s below)
+  const status = document.getElementById("status");
   document.getElementById("league").textContent = data.league;
-  document.getElementById("status").textContent = `GW${data.current_gw} · updated ${updated}`;
+  status.textContent = liveAt
+    ? `GW${data.current_gw} · live · updated ${ago(liveAt)}`
+    : `GW${data.current_gw} · updated ${updated}`;
+  status.classList.toggle("live", !!liveAt);
 }
+
+// "just now", "40s ago", "3 min ago"
+function ago(time) {
+  const s = Math.round((Date.now() - time) / 1000);
+  return s < 10 ? "just now" : s < 60 ? `${s}s ago` : `${Math.round(s / 60)} min ago`;
+}
+
+setInterval(() => { if (liveAt) showStatus(); }, 15000);
 
 // One click listener for the whole page
 document.addEventListener("click", (e) => {
@@ -706,10 +974,13 @@ async function init() {
 
   chipHalf = data.current_gw >= 19 ? 2 : 1;
   indexData();
+  computeLive();   // provisional bonus and auto-subs for the current gameweek
+  applyLive();     // ...fed into the Gameweek and Leaderboard tabs
   showStatus();
   for (const tab of TABS) render(tab);
   showTab();
   window.addEventListener("hashchange", showTab);
+  pollLive();      // live scores while the gameweek is in progress
   window.addEventListener("resize", markScrollable);
 }
 

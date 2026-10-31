@@ -11,7 +11,8 @@ mini-league. No login. All data comes from the public FPL API.
 - **Frontend: plain HTML/CSS/JS** (no framework), served by GitHub Pages from
   `docs/` on `main`. Pages fetch the pre-built JSON; the browser never calls
   the FPL API (it has no CORS support anyway).
-- **Optional later:** a Cloudflare Worker proxy for live mid-match standings.
+- **Live:** a Cloudflare Worker proxy feeds minute-by-minute scores to the
+  Gameweek and Leaderboard tabs (see "Live updates" below).
 - **Everything must stay free.**
 
 ## Owner and environment
@@ -121,6 +122,39 @@ errors instead of skipping quietly (the next run recovers).
    DFYTer Index, Pints); definitions agreed below.
 4. **Chip monitor** – which chips each manager has left and when they played them.
 
+**Live updates (Cloudflare Worker)** – `worker/fpl-live.js`, deployed by the
+owner at `https://fpl-live.calubrow.workers.dev` (free plan). Read-only proxy
+for only `event/<gw>/live/` and `fixtures/?event=<gw>`; caches 60s; CORS for
+calumjbrown.github.io and localhost:8000. To change it, the owner pastes the
+file into the Cloudflare dashboard (Workers & Pages → fpl-live → Edit code →
+Deploy). `pollLive()` / `fetchLive()` / `mergeLive()` in app.js: while the
+GW isn't final, fetch every 60s if a match is in progress, else every 5 min;
+paused while the page is hidden; merge into `gw_lineups` (minutes, points),
+`gw_breakdown`, `gw_fixtures`, `gw_bps`, then `computeLive()` +
+`applyLive()` and redraw Leaderboard + Gameweek keeping expanded rows open
+(`data-key` on details). Header shows "live · updated Ns ago". On failure
+the page keeps its data.
+
+**Provisional bonus and auto-subs (current GW, in the browser)** –
+`computeLive()` / `scoreTeam()` / `applyLive()` in app.js, so the same code
+will serve a future live Worker. Inputs exported by `03_export.R`:
+`gw_fixtures` (fixture, team_h, team_a, started, `ended` =
+finished_provisional, `bonus_final` = finished), `gw_bps`, `team_id` on
+lineups, `league_history.total`, and `gw_final` (finished && data_checked).
+`01_ingest.R` caches `fixtures/gw_XX.json`.
+- Bonus: matches started but not `bonus_final` → top 3 by BPS get 3/2/1,
+  ties share the higher place (FPL's 3,3,1 / 3,2,2 / 3,2,1,1).
+- Auto-subs (owner's condition): a starter is only subbed once **all his
+  team's matches this GW have ended** and he played 0 min (no match = ended).
+  Bench in order, GK↔GK only, formation stays legal; a bench player comes on
+  only if he played; if the next one might still play, the sub waits.
+- Armband → vice only when the captain is a confirmed no-show and the vice
+  (in the XI) has played. No subs with Bench Boost.
+- When `gw_final`, FPL's processed multipliers are used as-is.
+- Applied to Gameweek (both views) and Leaderboard (GW, total = previous GW
+  total + live score, rank, movement, Form's last point). Metrics stay on
+  R's figures. Logic covered by scenario tests (16 cases) run during build.
+
 ## Metric definitions (agreed with owner)
 
 All computed per manager per gameweek, then summed for the season.
@@ -196,7 +230,7 @@ All computed per manager per gameweek, then summed for the season.
 | 3. JSON export to `docs/data/`, scheduled workflow, commit-back | Done |
 | 4. Frontend shell (tabs) | Done – live at calumjbrown.github.io/fpl-dashboard |
 | 5. Design each page with the owner | In progress (ongoing tweaks) |
-| 6. Optional live-score Worker | To do |
+| 6. Optional live-score Worker | Done – fpl-live.calubrow.workers.dev |
 
 Notes for Step 5: the leaderboard design may need per-GW points history,
 which is in the cached `history/` files but not yet exported.

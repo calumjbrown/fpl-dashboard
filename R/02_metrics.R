@@ -139,7 +139,7 @@ build_metrics <- function() {
               by = "team") %>%
     left_join(bootstrap$element_types %>% select(element_type = id, pos = singular_name_short),
               by = "element_type") %>%
-    transmute(element = id, player = web_name, pos, club)
+    transmute(element = id, player = web_name, pos, club, team_id = team)
 
   live <- dir_ls(path(raw_dir, "live"), glob = "*.json") %>%
     map(read_live_file) %>%
@@ -419,7 +419,7 @@ build_metrics <- function() {
                                   select(gw, entry, chip, gw_points, transfer_cost)),
     squads          = add_names(squad %>%
                                   select(gw, entry, position, element, player, pos,
-                                         club, is_captain, is_vice_captain,
+                                         club, team_id, is_captain, is_vice_captain,
                                          pick_multiplier, minutes, points))
   )
 }

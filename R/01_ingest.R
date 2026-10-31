@@ -73,6 +73,14 @@ run_ingest <- function(league_id = Sys.getenv("LEAGUE_ID")) {
       file   = path(raw_dir, "live", sprintf("gw_%02d.json", gw)),
       frozen = gw %in% final_gws
     )
+    # Fixtures: which teams play, whether each match has started / ended /
+    # had its bonus confirmed, and live BPS - for provisional bonus and
+    # auto-subs on the website
+    fetch_to_cache(
+      path   = paste0("fixtures/?event=", gw),
+      file   = path(raw_dir, "fixtures", sprintf("gw_%02d.json", gw)),
+      frozen = gw %in% final_gws
+    )
   })
 
   # 4. Per-manager data -----------------------------------------------------
