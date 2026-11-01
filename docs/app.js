@@ -148,8 +148,9 @@ function sparkline(entry) {
 // doesn't apply auto-subs or pass the armband to the vice-captain until the
 // whole gameweek ends. So the current gameweek is scored here, provisionally:
 //
-// Bonus: in each match that has started but whose bonus FPL hasn't confirmed,
-//   the top three by BPS get 3 / 2 / 1. Ties share the higher place, which
+// Bonus: in each match that has started but where FPL hasn't yet awarded the
+//   bonus (no bonus winners listed, not finished), the top three by BPS get
+//   3 / 2 / 1. Ties share the higher place, which
 //   gives FPL's tie rules (3,3,1 / 3,2,2 / 3,2,1,1).
 // Auto-subs: a starter is only subbed off once every match his team plays
 //   this gameweek has ended and he played 0 minutes (no match at all counts
@@ -360,9 +361,15 @@ function mergeLive(scores, fixtures) {
   data.gw_breakdown = [...rows.values()];
   byElement = groupBy(data.gw_breakdown, "element");
 
+  // bonus_final: FPL has awarded the bonus (it lists the winners and adds the
+  // points well before it sets `finished`), so don't add provisional bonus
+  const bonusAwarded = (f) => {
+    const b = (f.stats || []).find((x) => x.identifier === "bonus");
+    return !!b && b.h.length + b.a.length > 0;
+  };
   data.gw_fixtures = fixtures.map((f) => ({
     fixture: f.id, team_h: f.team_h, team_a: f.team_a, started: !!f.started,
-    ended: !!f.finished_provisional, bonus_final: !!f.finished,
+    ended: !!f.finished_provisional, bonus_final: !!f.finished || bonusAwarded(f),
   }));
   data.gw_bps = fixtures.flatMap((f) => {
     const s = (f.stats || []).find((x) => x.identifier === "bps");

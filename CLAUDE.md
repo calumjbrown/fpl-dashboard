@@ -152,6 +152,11 @@ lineups, `league_history.total`, and `gw_final` (finished && data_checked).
 `01_ingest.R` caches `fixtures/gw_XX.json`.
 - Bonus: matches started but not `bonus_final` → top 3 by BPS get 3/2/1,
   ties share the higher place (FPL's 3,3,1 / 3,2,2 / 3,2,1,1).
+  `bonus_final` = fixture `finished` OR FPL has listed bonus winners in the
+  fixture's `bonus` stat. FPL awards bonus (and adds it to players'
+  total_points) hours before it sets `finished` – using `finished` alone
+  double-counted bonus (owner reported, 1 Nov 2026). Set in both
+  `03_export.R` and `mergeLive()`.
 - Auto-subs (owner's condition): a starter is only subbed once **all his
   team's matches this GW have ended** and he played 0 min (no match = ended).
   Bench in order, GK↔GK only, formation stays legal; a bench player comes on

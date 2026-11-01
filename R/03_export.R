@@ -59,11 +59,20 @@ read_gw_fixtures <- function(gw) {
   if (!file_exists(file)) return(list(fixtures = tibble(), bps = tibble()))
   fx <- fromJSON(file, simplifyVector = FALSE)
 
+  # bonus_final: FPL has awarded this match's bonus, so it's already in the
+  # players' points. FPL lists the bonus winners (and adds the points) well
+  # before it sets `finished`, so either counts - otherwise provisional bonus
+  # would be added on top of the real thing
+  bonus_awarded <- function(f) {
+    b <- keep(f$stats, ~ .x$identifier == "bonus")
+    length(b) > 0 && length(c(b[[1]]$h, b[[1]]$a)) > 0
+  }
+
   fixtures <- fx %>%
     map(~ tibble(fixture = .x$id, team_h = .x$team_h, team_a = .x$team_a,
                  started = isTRUE(.x$started),
                  ended = isTRUE(.x$finished_provisional),
-                 bonus_final = isTRUE(.x$finished))) %>%
+                 bonus_final = isTRUE(.x$finished) || bonus_awarded(.x))) %>%
     list_rbind()
 
   bps <- fx %>%
