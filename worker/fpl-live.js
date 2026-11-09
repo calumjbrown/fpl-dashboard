@@ -178,16 +178,20 @@ async function checkDeadline(env) {
   console.log(`Deadline alert for ${next.name}:`, JSON.stringify(result));
 }
 
-// Send a push to every signed-up phone (or just one invite's phones). Push
-// addresses that no longer work (404 / 410) are removed
+// Send a push to every signed-up phone (or just one invite's phones). Phones
+// whose invite has been deleted, and push addresses that no longer work
+// (404 / 410), are removed - so deleting an invite stops that person's alerts
 async function pushTo(env, message, invite = null) {
   await env.PUSH.put("message:last", JSON.stringify(message));
   let cursor, sent = 0, removed = 0, failed = 0;
+  const inviteOk = new Map();
   do {
     const page = await env.PUSH.list({ prefix: "sub:", cursor });
     for (const key of page.keys) {
       const rec = await env.PUSH.get(key.name, "json");
       if (!rec || (invite && rec.invite !== invite)) continue;
+      if (!inviteOk.has(rec.invite)) inviteOk.set(rec.invite, !!(await env.PUSH.get(`invite:${rec.invite}`)));
+      if (!inviteOk.get(rec.invite)) { await env.PUSH.delete(key.name); removed++; continue; }
       const status = await sendPush(rec.subscription.endpoint, env);
       if (status === 404 || status === 410) { await env.PUSH.delete(key.name); removed++; }
       else if (status >= 200 && status < 300) sent++;

@@ -169,7 +169,8 @@ deadline.
   app.js and the Worker); invites are KV entries `invite:<code>` → name.
   Add a person = add a KV entry and send them
   `https://calumjbrown.github.io/fpl-dashboard/?invite=<code>`; remove = delete
-  it (and their `sub:*` entries).
+  the `invite:` entry (the next send skips and deletes that invite's `sub:*`
+  entries). One code per person; a person can sign up several devices.
 
 **Provisional bonus and auto-subs (current GW, in the browser)** –
 `computeLive()` / `scoreTeam()` / `applyLive()` in app.js, so the same code
