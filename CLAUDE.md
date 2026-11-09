@@ -77,14 +77,17 @@ mini-league. No login. All data comes from the public FPL API.
   (default false = full fetch). Installs git and libuv1 in the container.
   Commits `docs/data` + `data/raw` only when `docs/data` changed.
 - **GitHub's scheduler proved unreliable** (24 Oct 2026: runs hours late or
-  dropped – only 4 scheduled runs in ~17h, none during a 12:30 kickoff).
-  Odd-minute crons help a bit; the intended reliable trigger is an external
-  free cron (e.g. cron-job.org) POSTing every 15 min to
-  `https://api.github.com/repos/calumjbrown/fpl-dashboard/actions/workflows/update-data.yml/dispatches`
-  with body `{"ref":"main","inputs":{"match_window_only":true}}` and headers
-  `Authorization: Bearer <fine-grained PAT, this repo only, Actions: read &
-  write>`, `Accept: application/vnd.github+json`. The token lives only in the
-  cron service – never in the repo.
+  dropped; GW10 6 Nov: no run between the 18:30 deadline and 22:50, so the
+  site stayed on GW9 through the 20:00 kickoff). The reliable trigger is the
+  **Cloudflare Worker's Cron Trigger** (`scheduled()` in
+  `worker/fpl-live.js`, every 15 min) POSTing to the workflow's
+  `dispatches` API with `{"ref":"main","inputs":{"match_window_only":"true"}}`,
+  authorised by a fine-grained GitHub PAT (this repo only, Actions: read &
+  write) stored as the Worker secret `GITHUB_TOKEN` – never in the repo.
+  GitHub's own crons stay as a backup.
+- `MATCH_WINDOW_ONLY` runs fetch if a current-GW fixture kicked off in the
+  last 3 h **or the current GW's deadline passed in the last 3 h** (so new
+  lineups appear before the first kickoff); otherwise skip after 2 calls.
 
 Known gap: if FPL starts updating partway through an ingest run, the run
 errors instead of skipping quietly (the next run recovers).

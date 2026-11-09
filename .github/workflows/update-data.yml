@@ -1,9 +1,10 @@
 name: Update dashboard data
 
 # GitHub's scheduler is best effort: runs are often hours late or dropped,
-# worst on the hour and half hour. So the schedules use odd minutes, and the
-# reliable trigger is an external cron service calling workflow_dispatch
-# every 15 min with match_window_only = true (setup notes in CLAUDE.md).
+# worst on the hour and half hour. The reliable trigger is the Cloudflare
+# Worker (worker/fpl-live.js), whose Cron Trigger calls workflow_dispatch
+# every 15 min with match_window_only = true. The schedules below are kept
+# as a backup.
 on:
   schedule:
     # Every 30 min, 11:07-23:37 UTC. Only fetches from FPL if a match kicked
@@ -49,7 +50,9 @@ jobs:
       - name: Fetch from FPL
         env:
           LEAGUE_ID: ${{ vars.LEAGUE_ID }}
-          MATCH_WINDOW_ONLY: ${{ github.event.schedule == '7,37 11-23 * * *' || inputs.match_window_only == true }}
+          # true from the half-hourly schedule, or from the Cloudflare Worker's
+          # trigger (which sends match_window_only as "true" text)
+          MATCH_WINDOW_ONLY: ${{ github.event.schedule == '7,37 11-23 * * *' || inputs.match_window_only == true || inputs.match_window_only == 'true' }}
         run: Rscript R/01_ingest.R
 
       - name: Build metrics and export JSON

@@ -9,12 +9,40 @@
 //   dashboard open, FPL is asked at most about once a minute per endpoint.
 // - Only the dashboard (and the local preview) may read it from a browser.
 //
+// It also replaces GitHub's unreliable scheduler: a Cloudflare Cron Trigger
+// (every 15 minutes) calls `scheduled` below, which asks GitHub to run the
+// "Update dashboard data" workflow with match_window_only = true, so the run
+// only fetches from FPL around deadlines and matches. Needs a GitHub token
+// stored in the Worker as the secret GITHUB_TOKEN (never in this file).
+//
 // Deploy: paste this whole file into a Cloudflare Worker (see the setup steps).
 
 const FPL = "https://fantasy.premierleague.com/api/";
 const ORIGINS = ["https://calumjbrown.github.io", "http://localhost:8000"];
+const WORKFLOW = "https://api.github.com/repos/calumjbrown/fpl-dashboard/actions/workflows/update-data.yml/dispatches";
+
+// Ask GitHub to start the data update (what the "Run workflow" button does)
+async function triggerUpdate(env) {
+  const resp = await fetch(WORKFLOW, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${env.GITHUB_TOKEN}`,
+      "Accept": "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      "User-Agent": "fpl-live-worker",
+    },
+    body: JSON.stringify({ ref: "main", inputs: { match_window_only: "true" } }),
+  });
+  // 204 = started. Anything else shows in the Worker's logs on Cloudflare
+  if (resp.status !== 204) console.log("GitHub trigger failed:", resp.status, await resp.text());
+}
 
 export default {
+  // Runs on the Cron Trigger set up in Cloudflare (every 15 minutes)
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(triggerUpdate(env));
+  },
+
   async fetch(request) {
     const url = new URL(request.url);
     const origin = request.headers.get("Origin");

@@ -48,10 +48,18 @@ run_ingest <- function(league_id = Sys.getenv("LEAGUE_ID")) {
   message("Current GW: ", current_gw,
           " | final GWs cached permanently: ", length(final_gws))
 
-  # The half-hourly schedule sets MATCH_WINDOW_ONLY so that it only fetches
-  # while a match is on or just finished. The daily run always fetches.
-  if (Sys.getenv("MATCH_WINDOW_ONLY") == "true" && !match_in_window(current_gw)) {
-    message("No match in the last 3 hours - skipping run.")
+  # The frequent triggers set MATCH_WINDOW_ONLY so that they only fetch while
+  # a match is on or just finished, or just after the deadline (so the new
+  # gameweek's lineups appear before the first kickoff). The daily run
+  # always fetches.
+  deadline <- as.POSIXct(events$deadline_time[events$id == current_gw],
+                         format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+  since_deadline <- as.numeric(difftime(Sys.time(), deadline, units = "hours"))
+  after_deadline <- isTRUE(since_deadline >= 0 && since_deadline < 3)
+
+  if (Sys.getenv("MATCH_WINDOW_ONLY") == "true" &&
+      !after_deadline && !match_in_window(current_gw)) {
+    message("No match or deadline in the last 3 hours - skipping run.")
     return(invisible(FALSE))
   }
 
