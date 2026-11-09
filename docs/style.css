@@ -534,6 +534,33 @@ details[open] summary.toggle::after { transform: translateY(-30%) rotate(-135deg
 
 .note { margin: 12px 4px 0; font-size: .8rem; color: var(--muted); }
 
+/* Deadline alerts panel (invite-only), at the bottom of every tab */
+.alerts {
+  margin-bottom: 48px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: .9rem;
+}
+main.wrap:has(+ footer .alerts:not([hidden])) { padding-bottom: 24px; }
+.alerts h2 { margin: 0 0 6px; font-size: 1rem; color: var(--accent); }
+.alerts p { margin: 6px 0; }
+.alerts .note { margin: 8px 0 0; }
+.alert-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+.alert-btn {
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--bg);  /* light on the dark purple; dark on dark mode's light purple */
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.alert-btn.quiet { background: var(--line); color: var(--text); }
+
 /* Cards and chips ----------------------------------------------------------- */
 
 .card {

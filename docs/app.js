@@ -854,6 +854,122 @@ function renderChips() {
       Tap a column heading to sort.</p>`;
 }
 
+// Deadline alerts (Web Push) ------------------------------------------------------
+// Invite-only: the panel appears for someone who opened an invite link
+// (?invite=<code>) or is already signed up. Turning on asks the phone for a
+// push address and sends it with the invite code to the Worker, which checks
+// the code and stores it. The Worker then alerts an hour before each deadline.
+// iPhones only allow this once the dashboard has been added to the Home Screen
+// and opened from its icon. (The manifest has no start_url on purpose, so the
+// Home Screen icon opens the invite link the person added it from.)
+
+const VAPID_PUBLIC = "BA46Wre04dySuzf0tzxG20FflBJRj5oukMsBKBCTOMuBGxcj9vNOVwTw8zBoEOJxKWnfx3sLDQJLwiTJ8aQCHFA";
+const alerts = { invite: null, reg: null, sub: null, note: "" };
+
+// The invite code: from the link, else remembered from an earlier visit
+function inviteCode() {
+  const fromUrl = new URLSearchParams(location.search).get("invite");
+  try {
+    if (fromUrl) localStorage.setItem("fpl-invite", fromUrl);
+    return fromUrl || localStorage.getItem("fpl-invite");
+  } catch (err) {
+    return fromUrl;
+  }
+}
+
+async function setupAlerts() {
+  alerts.invite = inviteCode();
+  if ("serviceWorker" in navigator && "PushManager" in window && "Notification" in window) {
+    try {
+      alerts.reg = await navigator.serviceWorker.register("sw.js");
+      alerts.sub = await alerts.reg.pushManager.getSubscription();
+    } catch (err) {
+      alerts.reg = null;
+    }
+  }
+  if (alerts.invite || alerts.sub) renderAlerts();  // otherwise nothing is shown
+}
+
+function renderAlerts() {
+  const box = document.getElementById("alerts");
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const homeScreen = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+  const button = (action, label, quiet) =>
+    `<button class="alert-btn${quiet ? " quiet" : ""}" data-alert="${action}" type="button">${label}</button>`;
+
+  let body;
+  if (!alerts.reg) {
+    body = ios && !homeScreen
+      ? `<p>To get an alert an hour before each deadline on iPhone: tap <b>Share</b>, then
+           <b>Add to Home Screen</b>. Open the dashboard from its new icon and come back here.</p>`
+      : `<p>This browser can't receive notifications.</p>`;
+  } else if (Notification.permission === "denied") {
+    body = `<p>Notifications are blocked for the dashboard. Turn them on in Settings, then
+              reopen it from its icon.</p>`;
+  } else if (alerts.sub) {
+    body = `<p><b>On.</b> This phone gets an alert an hour before each gameweek deadline.</p>
+            <div class="alert-actions">${button("test", "Send test")}${button("off", "Turn off", true)}</div>`;
+  } else {
+    body = `<p>Get an alert on this phone an hour before each gameweek deadline.</p>
+            <div class="alert-actions">${button("on", "Turn on deadline alerts")}</div>`;
+  }
+  box.innerHTML = `<h2>Deadline alerts</h2>${body}` +
+                  (alerts.note ? `<p class="note">${esc(alerts.note)}</p>` : "");
+  box.hidden = false;
+}
+
+async function alertsAction(action) {
+  alerts.note = "";
+  try {
+    if (action === "on") {
+      // Must be the first thing after the tap, or iPhones won't show the prompt
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        alerts.note = "Notifications weren't allowed on this phone.";
+      } else {
+        const sub = await alerts.reg.pushManager.subscribe({
+          userVisibleOnly: true, applicationServerKey: base64urlBytes(VAPID_PUBLIC),
+        });
+        const reply = await pushApi("subscribe", { invite: alerts.invite, subscription: sub.toJSON() });
+        if (reply.ok) {
+          alerts.sub = sub;
+          alerts.note = `All set, ${reply.name}. Tap Send test to check it works.`;
+        } else {
+          await sub.unsubscribe();
+          alerts.note = reply.error === "invite"
+            ? "That invite isn't valid. Ask for a new link."
+            : "Couldn't turn alerts on. Please try again later.";
+        }
+      }
+    } else if (action === "off") {
+      const endpoint = alerts.sub.endpoint;
+      await alerts.sub.unsubscribe();
+      alerts.sub = null;
+      await pushApi("unsubscribe", { endpoint });
+      alerts.note = "Alerts turned off on this phone.";
+    } else if (action === "test") {
+      const reply = await pushApi("test", { invite: alerts.invite });
+      alerts.note = !reply.ok ? "Couldn't send a test."
+        : reply.sent ? "Test sent. It should arrive in a few seconds."
+        : "No signed-up phones found for this invite. Turn alerts off and on again.";
+    }
+  } catch (err) {
+    alerts.note = "Something went wrong: " + err.message;
+  }
+  renderAlerts();
+}
+
+async function pushApi(action, body) {
+  const resp = await fetch(`${LIVE_URL}/push/${action}`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  return resp.json().catch(() => ({ ok: false }));
+}
+
+// The push key arrives as base64url text; the phone wants the raw bytes
+const base64urlBytes = (s) =>
+  Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+
 // Page setup ----------------------------------------------------------------
 
 const RENDER = {
@@ -975,6 +1091,9 @@ document.addEventListener("click", (e) => {
   const half = e.target.closest("[data-half]");
   if (half) { chipHalf = Number(half.dataset.half); render("chips"); }
 
+  const alertButton = e.target.closest("[data-alert]");
+  if (alertButton) alertsAction(alertButton.dataset.alert);
+
   // Chips table headings: same column again reverses, a new column starts ascending
   const sort = e.target.closest("[data-sort]");
   if (sort) {
@@ -1018,6 +1137,7 @@ async function init() {
   showTab();
   window.addEventListener("hashchange", showTab);
   pollLive();      // live scores while the gameweek is in progress
+  setupAlerts();   // deadline alerts panel, for invited people
   window.addEventListener("resize", markScrollable);
 }
 

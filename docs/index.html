@@ -11,6 +11,11 @@
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <!-- Lets the dashboard be added to the Home Screen as an app, which iPhones
+       need before they allow deadline alerts -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Castle Ball">
   <!-- Load the stylesheet and script with a version that changes every
        minute, so browsers pick up a new release within a minute instead of
        reusing a copy for up to 10 minutes (GitHub Pages' cache setting) -->
@@ -53,6 +58,9 @@
     <section id="tab-metrics" hidden></section>
     <section id="tab-chips" hidden></section>
   </main>
+
+  <!-- Deadline alerts: only shown to people with an invite (see app.js) -->
+  <footer class="wrap"><div class="alerts" id="alerts" hidden></div></footer>
 
   <script>document.write('<script src="app.js?v=' + ASSET_V + '"><\/script>');</script>
 </body>

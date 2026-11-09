@@ -146,6 +146,31 @@ paused while the page is hidden; merge into `gw_lineups` (minutes, points),
 (`data-key` on details). Header shows "live · updated Ns ago". On failure
 the page keeps its data.
 
+**Deadline alerts (Web Push, invite-only)** – started Nov 2026 as a test for
+the owner only; everyone is on iPhone. 1 alert, ~45–60 min before each
+deadline.
+- Site: `docs/sw.js` (service worker: on push, fetches the message from the
+  Worker's `/push/latest` and shows it; no caching), `docs/manifest.webmanifest`
+  (deliberately **no start_url**, so the Home Screen icon opens the invite
+  link it was added from – iPhone Home Screen apps don't share Safari's
+  storage), `img/icon-192.png` / `icon-512.png`, and the "Deadline alerts"
+  panel at the bottom of every tab (`setupAlerts()` / `alertsAction()` in
+  app.js). The panel only appears with `?invite=<code>` (also remembered in
+  localStorage) or an existing subscription. iPhone needs iOS 16.4+, Add to
+  Home Screen, open from the icon.
+- Worker (`worker/fpl-live.js`): `POST /push/subscribe` (checks
+  `invite:<code>` in KV, only accepts Apple/Google/Mozilla/Microsoft push
+  hosts), `/push/unsubscribe`, `/push/test`, `GET /push/latest`. The cron
+  `checkDeadline()` sends once per GW (`sent:<gw>` key) when the next
+  deadline is ≤ 60 min away. Pushes are content-free, signed with VAPID
+  (ES256 via WebCrypto). 404/410 subscriptions are deleted.
+- Cloudflare setup (owner): KV namespace bound as `PUSH`; secret
+  `VAPID_PRIVATE_JWK` (private JWK – never in the repo; public key is in
+  app.js and the Worker); invites are KV entries `invite:<code>` → name.
+  Add a person = add a KV entry and send them
+  `https://calumjbrown.github.io/fpl-dashboard/?invite=<code>`; remove = delete
+  it (and their `sub:*` entries).
+
 **Provisional bonus and auto-subs (current GW, in the browser)** –
 `computeLive()` / `scoreTeam()` / `applyLive()` in app.js, so the same code
 will serve a future live Worker. Inputs exported by `03_export.R`:
