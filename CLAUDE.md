@@ -74,19 +74,23 @@ mini-league. No login. All data comes from the public FPL API.
   `card_detail`, `gw_missed`, `chip_status` (manager × half × chip, status
   used / available / locked / expired). Only rewritten when `data_hash`
   changes, so `updated` = when the data last changed.
-- `.github/workflows/update-data.yml` – ingest → export → commit. Cron
-  `7,37 11-23 * * *` sets `MATCH_WINDOW_ONLY=true`, so ingest only fetches if
-  a fixture in the current GW kicked off in the last 3 hours
-  (`match_in_window()` in `fpl_api.R`); `17 6 * * *` is a daily full run.
-  Manual / API trigger (`workflow_dispatch`) takes input `match_window_only`
-  (default false = full fetch). Installs git and libuv1 in the container.
-  Commits `docs/data` + `data/raw` only when `docs/data` changed.
+- `.github/workflows/update-data.yml` – ingest → export → commit. Triggered
+  mainly by the Worker (`workflow_dispatch`, input `match_window_only`;
+  "true" → ingest only fetches if a current-GW fixture kicked off or the
+  deadline passed in the last 3 h). GitHub's own schedule is now only a
+  daily backup (`17 6 * * *`); the half-hourly cron was removed (11 Nov
+  2026). Installs git and libuv1 in the container with up to 5 attempts –
+  Ubuntu's package servers failed (exit code 100) from 14:00 UTC 11 Nov and
+  every 15-min run emailed the owner a failure. Commits `docs/data` +
+  `data/raw` only when `docs/data` changed.
 - **GitHub's scheduler proved unreliable** (24 Oct 2026: runs hours late or
   dropped; GW10 6 Nov: no run between the 18:30 deadline and 22:50, so the
   site stayed on GW9 through the 20:00 kickoff). The reliable trigger is the
   **Cloudflare Worker's Cron Trigger** (`scheduled()` in
-  `worker/fpl-live.js`, every 15 min) POSTing to the workflow's
-  `dispatches` API with `{"ref":"main","inputs":{"match_window_only":"true"}}`,
+  `worker/fpl-live.js`, every 15 min). `updateNeeded()` checks FPL itself and
+  only POSTs to the workflow's `dispatches` API (`match_window_only: "true"`)
+  within 3 h after the current GW's deadline or a kickoff – no runs at all
+  otherwise – plus one full run (`"false"`) at 06:00–06:15 UTC daily,
   authorised by a fine-grained GitHub PAT (this repo only, Actions: read &
   write) stored as the Worker secret `GITHUB_TOKEN` – never in the repo.
   GitHub's own crons stay as a backup.

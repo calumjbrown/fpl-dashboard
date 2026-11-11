@@ -1,16 +1,12 @@
 name: Update dashboard data
 
-# GitHub's scheduler is best effort: runs are often hours late or dropped,
-# worst on the hour and half hour. The reliable trigger is the Cloudflare
-# Worker (worker/fpl-live.js), whose Cron Trigger calls workflow_dispatch
-# every 15 min with match_window_only = true. The schedules below are kept
-# as a backup.
+# GitHub's scheduler is best effort: runs are often hours late or dropped.
+# The reliable trigger is the Cloudflare Worker (worker/fpl-live.js): its
+# 15-minute timer calls workflow_dispatch only within 3 hours after a
+# deadline or kickoff (match_window_only = true), plus a full run each
+# morning at 06:00 UTC. GitHub's own daily schedule below is just a backup.
 on:
   schedule:
-    # Every 30 min, 11:07-23:37 UTC. Only fetches from FPL if a match kicked
-    # off in the last 3 hours (see MATCH_WINDOW_ONLY below).
-    - cron: "7,37 11-23 * * *"
-    # Daily full run: picks up final bonus points and anything missed
     - cron: "17 6 * * *"
   workflow_dispatch:
     inputs:
@@ -34,11 +30,19 @@ jobs:
     container: rocker/r-ver:4.5
     steps:
       # The R container lacks git (checkout needs it to allow pushing back)
-      # and libuv1 (the pre-built `fs` package needs it to load)
+      # and libuv1 (the pre-built `fs` package needs it to load). Ubuntu's
+      # package servers sometimes fail (exit code 100 on 11 Nov 2026), so
+      # try up to 5 times, 30 seconds apart
       - name: Install system libraries
         run: |
-          apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git libuv1
+          for attempt in 1 2 3 4 5; do
+            apt-get -o Acquire::Retries=3 update &&
+              DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=3 install -y \
+                --no-install-recommends git libuv1 && exit 0
+            echo "Package install failed (attempt $attempt of 5) - retrying in 30s"
+            sleep 30
+          done
+          exit 1
 
       - uses: actions/checkout@v5
 
@@ -50,9 +54,9 @@ jobs:
       - name: Fetch from FPL
         env:
           LEAGUE_ID: ${{ vars.LEAGUE_ID }}
-          # true from the half-hourly schedule, or from the Cloudflare Worker's
-          # trigger (which sends match_window_only as "true" text)
-          MATCH_WINDOW_ONLY: ${{ github.event.schedule == '7,37 11-23 * * *' || inputs.match_window_only == true || inputs.match_window_only == 'true' }}
+          # true for the Worker's match-window runs (sent as "true" text);
+          # false for its morning run, GitHub's daily backup and manual runs
+          MATCH_WINDOW_ONLY: ${{ inputs.match_window_only == true || inputs.match_window_only == 'true' }}
         run: Rscript R/01_ingest.R
 
       - name: Build metrics and export JSON

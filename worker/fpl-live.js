@@ -9,8 +9,9 @@
 //
 // 2. Data updates: a Cloudflare Cron Trigger (every 15 minutes) calls
 //    `scheduled`, which asks GitHub to run the "Update dashboard data"
-//    workflow with match_window_only = true (GitHub's own scheduler is
-//    unreliable). Needs the secret GITHUB_TOKEN.
+//    workflow - only within 3 hours after a deadline or a kickoff
+//    (match_window_only = true), plus one full run each morning at 06:00 UTC
+//    (GitHub's own scheduler is unreliable). Needs the secret GITHUB_TOKEN.
 //
 // 3. Deadline alerts (Web Push): invited people tap "Turn on deadline alerts"
 //    on the dashboard; their phone's push address is stored here. On the same
@@ -85,8 +86,42 @@ export default {
 
 // Data updates -----------------------------------------------------------------
 
-// Ask GitHub to start the data update (what the "Run workflow" button does)
+// Is there anything for the data update to do? Same rule as the R pipeline:
+// the current gameweek's deadline passed in the last 3 hours, or one of its
+// matches kicked off in the last 3 hours. Outside those windows no GitHub run
+// is started at all (each run installs software, which can fail - Ubuntu's
+// package servers did on 11 Nov - and every failure emails the owner)
+async function updateNeeded() {
+  const boot = await (await fetch(FPL + "bootstrap-static/", {
+    headers: UA, cf: { cacheTtl: 300, cacheEverything: true },
+  })).json();
+  const now = Date.now(), window = 3 * 3600 * 1000;
+  const current = boot.events.find((e) => e.is_current);
+  if (!current) return false;
+  const sinceDeadline = now - Date.parse(current.deadline_time);
+  if (sinceDeadline >= 0 && sinceDeadline < window) return true;
+
+  const fixtures = await (await fetch(`${FPL}fixtures/?event=${current.id}`, {
+    headers: UA, cf: { cacheTtl: 60, cacheEverything: true },
+  })).json();
+  return fixtures.some((f) => f.kickoff_time &&
+    now >= Date.parse(f.kickoff_time) && now - Date.parse(f.kickoff_time) < window);
+}
+
+// Ask GitHub to start the data update (what the "Run workflow" button does):
+// a quick match-window run when there's something to update, plus one full
+// run each morning (06:00-06:15 UTC) that picks up gameweeks FPL has just
+// finalised and overnight price changes
 async function triggerUpdate(env) {
+  const t = new Date();
+  const daily = t.getUTCHours() === 6 && t.getUTCMinutes() < 15;
+  if (!daily) {
+    try {
+      if (!(await updateNeeded())) return;
+    } catch (err) {
+      // FPL unavailable (e.g. mid-update): fall through and let GitHub try
+    }
+  }
   const resp = await fetch(WORKFLOW, {
     method: "POST",
     headers: {
@@ -95,7 +130,7 @@ async function triggerUpdate(env) {
       "X-GitHub-Api-Version": "2022-11-28",
       "User-Agent": "fpl-live-worker",
     },
-    body: JSON.stringify({ ref: "main", inputs: { match_window_only: "true" } }),
+    body: JSON.stringify({ ref: "main", inputs: { match_window_only: daily ? "false" : "true" } }),
   });
   // 204 = started. Anything else shows in the Worker's logs on Cloudflare
   if (resp.status !== 204) console.log("GitHub trigger failed:", resp.status, await resp.text());
