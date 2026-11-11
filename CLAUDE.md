@@ -50,7 +50,12 @@ mini-league. No login. All data comes from the public FPL API.
   `bootstrap.json`, `standings.json`, `live/gw_XX.json`,
   `history/<entry>.json`, `transfers/<entry>.json`,
   `picks/gw_XX/<entry>.json`, `last_run.json`. Finished + `data_checked` GWs
-  are frozen and never refetched. Only fetches picks for GWs present in each
+  are frozen and never refetched – but only after one fetch **since** they
+  became final (`data/raw/frozen_gws.json` lists those). Before this fix
+  (11 Nov 2026) GW10's live file was frozen from a mid-match fetch, so 32
+  players' later corrections were missed (owner saw Chris Loadman 47 vs 48
+  official; GW10 pint went to the wrong manager). After the fix all 150
+  running totals (15 managers × GW1–10) matched FPL's history. Only fetches picks for GWs present in each
   manager's history. First run ~175 calls, later runs ~50.
 - `R/02_metrics.R` – **working.** Metrics computed and CSVs written to
   `data/processed/`. All `library()` calls live in `fpl_api.R` inside

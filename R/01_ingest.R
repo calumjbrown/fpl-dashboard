@@ -39,6 +39,16 @@ run_ingest <- function(league_id = Sys.getenv("LEAGUE_ID")) {
     filter(finished, data_checked) %>%
     pull(id)
 
+  # Only freeze a final gameweek's files once they've been fetched at least
+  # once SINCE it became final. Otherwise a copy saved mid-match would be
+  # kept for ever (GW10's live scores were frozen from a Sunday 17:01 fetch,
+  # so 32 players' later corrections were missed). frozen_gws.json records
+  # which final gameweeks have had that last fetch; it's updated at the end
+  # of a successful run
+  frozen_file <- path(raw_dir, "frozen_gws.json")
+  done_gws <- if (file_exists(frozen_file)) fromJSON(frozen_file) else integer(0)
+  locked_gws <- intersect(final_gws, done_gws)
+
   if (length(started_gws) == 0) {
     message("No gameweeks have started yet - nothing to fetch.")
     return(invisible(FALSE))
@@ -46,7 +56,8 @@ run_ingest <- function(league_id = Sys.getenv("LEAGUE_ID")) {
 
   current_gw <- max(started_gws)
   message("Current GW: ", current_gw,
-          " | final GWs cached permanently: ", length(final_gws))
+          " | final GWs frozen: ", length(locked_gws),
+          " | final GWs getting a last fetch: ", length(setdiff(final_gws, locked_gws)))
 
   # The frequent triggers set MATCH_WINDOW_ONLY so that they only fetch while
   # a match is on or just finished, or just after the deadline (so the new
@@ -79,7 +90,7 @@ run_ingest <- function(league_id = Sys.getenv("LEAGUE_ID")) {
     fetch_to_cache(
       path   = paste0("event/", gw, "/live/"),
       file   = path(raw_dir, "live", sprintf("gw_%02d.json", gw)),
-      frozen = gw %in% final_gws
+      frozen = gw %in% locked_gws
     )
     # Fixtures: which teams play, whether each match has started / ended /
     # had its bonus confirmed, and live BPS - for provisional bonus and
@@ -87,7 +98,7 @@ run_ingest <- function(league_id = Sys.getenv("LEAGUE_ID")) {
     fetch_to_cache(
       path   = paste0("fixtures/?event=", gw),
       file   = path(raw_dir, "fixtures", sprintf("gw_%02d.json", gw)),
-      frozen = gw %in% final_gws
+      frozen = gw %in% locked_gws
     )
   })
 
@@ -114,10 +125,14 @@ run_ingest <- function(league_id = Sys.getenv("LEAGUE_ID")) {
         path   = paste0("entry/", entry, "/event/", gw, "/picks/"),
         file   = path(raw_dir, "picks", sprintf("gw_%02d", gw),
                       paste0(entry, ".json")),
-        frozen = gw %in% final_gws
+        frozen = gw %in% locked_gws
       )
     })
   })
+
+  # Every final gameweek has now been fetched since it became final, so they
+  # can all be frozen from the next run on
+  write_json(sort(union(done_gws, final_gws)), frozen_file)
 
   # 5. Record what happened -------------------------------------------------
   run_info <- list(
