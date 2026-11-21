@@ -69,12 +69,12 @@
     {
       "entry": 3072794,
       "entry_name": "Øde Toilette",
-      "event_total": 19,
+      "event_total": 22,
       "last_rank": 6,
       "player_name": "Joe Boyd-Morritt",
       "rank": 6,
       "rank_sort": 6,
-      "total": 648
+      "total": 651
     },
     {
       "entry": 1190912,
@@ -97,25 +97,25 @@
       "total": 641
     },
     {
+      "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/6166238/49d27b4b-11b5-419c-bab9-c2ab0af62d32.png",
+      "entry": 6777022,
+      "entry_name": "Rambunctious",
+      "event_total": 31,
+      "last_rank": 10,
+      "player_name": "David Glanville",
+      "rank": 9,
+      "rank_sort": 9,
+      "total": 639
+    },
+    {
       "entry": 1751789,
       "entry_name": "STTTWOTL FC",
       "event_total": 21,
       "last_rank": 9,
       "player_name": "Emon Keshavarz",
-      "rank": 9,
-      "rank_sort": 9,
-      "total": 638
-    },
-    {
-      "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/6166238/49d27b4b-11b5-419c-bab9-c2ab0af62d32.png",
-      "entry": 6777022,
-      "entry_name": "Rambunctious",
-      "event_total": 28,
-      "last_rank": 10,
-      "player_name": "David Glanville",
       "rank": 10,
       "rank_sort": 10,
-      "total": 636
+      "total": 638
     },
     {
       "entry": 8186920,
