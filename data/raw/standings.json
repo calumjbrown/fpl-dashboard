@@ -29,12 +29,12 @@
       "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/8186839/b8ef6edc-d03a-463e-8592-50e43e9903bc.png",
       "entry": 5611625,
       "entry_name": "Barnaby's XI",
-      "event_total": 40,
+      "event_total": 44,
       "last_rank": 3,
       "player_name": "Barnaby Hodgkins",
       "rank": 2,
       "rank_sort": 2,
-      "total": 711
+      "total": 715
     },
     {
       "entry": 7984273,
@@ -59,31 +59,51 @@
     {
       "entry": 5618693,
       "entry_name": "Brown Town",
-      "event_total": 31,
+      "event_total": 32,
       "last_rank": 4,
       "player_name": "Calum Brown",
       "rank": 5,
       "rank_sort": 5,
-      "total": 697
+      "total": 698
     },
     {
       "entry": 3072794,
       "entry_name": "Øde Toilette",
-      "event_total": 27,
+      "event_total": 37,
       "last_rank": 6,
       "player_name": "Joe Boyd-Morritt",
       "rank": 6,
       "rank_sort": 6,
-      "total": 656
+      "total": 666
+    },
+    {
+      "entry": 1751789,
+      "entry_name": "STTTWOTL FC",
+      "event_total": 35,
+      "last_rank": 9,
+      "player_name": "Emon Keshavarz",
+      "rank": 7,
+      "rank_sort": 7,
+      "total": 652
     },
     {
       "entry": 1190912,
       "entry_name": "tbc",
-      "event_total": 30,
+      "event_total": 31,
       "last_rank": 8,
       "player_name": "Matthew Kemp",
-      "rank": 7,
-      "rank_sort": 7,
+      "rank": 8,
+      "rank_sort": 8,
+      "total": 652
+    },
+    {
+      "entry": 168599,
+      "entry_name": "Bryan Mbigbumo",
+      "event_total": 25,
+      "last_rank": 7,
+      "player_name": "Matthew Taberham",
+      "rank": 9,
+      "rank_sort": 9,
       "total": 651
     },
     {
@@ -93,39 +113,19 @@
       "event_total": 36,
       "last_rank": 10,
       "player_name": "David Glanville",
-      "rank": 8,
-      "rank_sort": 8,
-      "total": 644
-    },
-    {
-      "entry": 168599,
-      "entry_name": "Bryan Mbigbumo",
-      "event_total": 16,
-      "last_rank": 7,
-      "player_name": "Matthew Taberham",
-      "rank": 9,
-      "rank_sort": 9,
-      "total": 642
-    },
-    {
-      "entry": 1751789,
-      "entry_name": "STTTWOTL FC",
-      "event_total": 24,
-      "last_rank": 9,
-      "player_name": "Emon Keshavarz",
       "rank": 10,
       "rank_sort": 10,
-      "total": 641
+      "total": 644
     },
     {
       "entry": 8186920,
       "entry_name": "Sesko Meal Deal",
-      "event_total": 32,
+      "event_total": 36,
       "last_rank": 11,
       "player_name": "Christopher Loadman",
       "rank": 11,
       "rank_sort": 11,
-      "total": 639
+      "total": 643
     },
     {
       "entry": 8562038,
@@ -140,12 +140,12 @@
     {
       "entry": 5408113,
       "entry_name": "Le Tiss' Tinfoilers",
-      "event_total": 18,
+      "event_total": 23,
       "last_rank": 12,
       "player_name": "Jamie Stovin-Bradford",
       "rank": 13,
       "rank_sort": 13,
-      "total": 609
+      "total": 614
     },
     {
       "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/5868715/6c59abbd-c06c-47b4-9862-e22275eecbdb.png",
@@ -161,12 +161,12 @@
     {
       "entry": 8320512,
       "entry_name": "fcmcp",
-      "event_total": 27,
+      "event_total": 28,
       "last_rank": 15,
       "player_name": "Alex Macpherson",
       "rank": 15,
       "rank_sort": 15,
-      "total": 506
+      "total": 507
     }
   ]
 }
