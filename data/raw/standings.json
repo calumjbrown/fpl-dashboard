@@ -151,22 +151,22 @@
       "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/5868715/6c59abbd-c06c-47b4-9862-e22275eecbdb.png",
       "entry": 5868715,
       "entry_name": "Jersey Barnstormers",
-      "event_total": 27,
+      "event_total": 24,
       "last_rank": 14,
       "player_name": "Adam Hodgkins",
       "rank": 14,
       "rank_sort": 14,
-      "total": 591
+      "total": 588
     },
     {
       "entry": 8320512,
       "entry_name": "fcmcp",
-      "event_total": 28,
+      "event_total": 25,
       "last_rank": 15,
       "player_name": "Alex Macpherson",
       "rank": 15,
       "rank_sort": 15,
-      "total": 507
+      "total": 504
     }
   ]
 }
