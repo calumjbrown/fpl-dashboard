@@ -59,12 +59,12 @@
     {
       "entry": 8605433,
       "entry_name": "3 Little Piggies",
-      "event_total": 1,
+      "event_total": 2,
       "last_rank": 5,
       "player_name": "Eliott Wolstenholme",
       "rank": 5,
       "rank_sort": 5,
-      "total": 702
+      "total": 703
     },
     {
       "entry": 3072794,
@@ -89,12 +89,12 @@
     {
       "entry": 168599,
       "entry_name": "Bryan Mbigbumo",
-      "event_total": 14,
+      "event_total": 15,
       "last_rank": 9,
       "player_name": "Matthew Taberham",
       "rank": 8,
       "rank_sort": 8,
-      "total": 667
+      "total": 668
     },
     {
       "club_badge_src": "https://fantasy.premierleague.com/gcs/plfpl-production-adobe-approved/plfpl-production/6166238/49d27b4b-11b5-419c-bab9-c2ab0af62d32.png",
@@ -120,12 +120,12 @@
     {
       "entry": 1190912,
       "entry_name": "tbc",
-      "event_total": 0,
+      "event_total": 1,
       "last_rank": 8,
       "player_name": "Matthew Kemp",
       "rank": 11,
       "rank_sort": 11,
-      "total": 654
+      "total": 655
     },
     {
       "entry": 8562038,
@@ -161,12 +161,12 @@
     {
       "entry": 8320512,
       "entry_name": "fcmcp",
-      "event_total": 4,
+      "event_total": 5,
       "last_rank": 15,
       "player_name": "Alex Macpherson",
       "rank": 15,
       "rank_sort": 15,
-      "total": 507
+      "total": 508
     }
   ]
 }
